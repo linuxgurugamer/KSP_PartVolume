@@ -67,6 +67,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RegisterToolbar.cs" />
     <Compile Include="SettingsWin.cs" />
+    <Compile Include="Toolbar.cs" />
+    <Compile Include="WarningDialog.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="AssemblyVersion.tt">

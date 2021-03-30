@@ -1,15 +1,4 @@
-﻿
-using System;
-using SpaceTuxUtility;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Text;
-using UnityEngine;
-using KSP_Log;
-using KSP.UI.Screens;
-
-using ToolbarControl_NS;
+﻿using UnityEngine;
 using ClickThroughFix;
 
 
@@ -56,6 +45,7 @@ namespace KSP_PartVolume
             Settings.rcsFiller = GUILayout.HorizontalSlider(Settings.rcsFiller, 0, 1, GUILayout.Width(250));
             GUILayout.EndHorizontal();
             Settings.doTanks = GUILayout.Toggle(Settings.doTanks, "Include tanks");
+            Settings.manned = GUILayout.Toggle(Settings.manned, "Include manned parts");
 
             GUILayout.BeginHorizontal();
             Settings.limitSize = GUILayout.Toggle(Settings.limitSize, "Limit Size");

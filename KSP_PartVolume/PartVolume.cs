@@ -5,20 +5,15 @@ using System.IO;
 using System.Text;
 using UnityEngine;
 using KSP_Log;
-using KSP.UI.Screens;
-
-using ToolbarControl_NS;
-
 
 namespace KSP_PartVolume
 {
     [KSPAddon(KSPAddon.Startup.MainMenu, false)]
-     public partial class PartVolume : MonoBehaviour
+    public partial class PartVolume : MonoBehaviour
     {
         internal static PartVolume Instance;
-        static internal ToolbarControl toolbarControl = null;
 
-        public  static Log Log;
+        public static Log Log;
         public static string VOL_CFG_FILE;
         public static string CFG_FILE;
 
@@ -29,7 +24,6 @@ namespace KSP_PartVolume
         SortedDictionary<string, StringBuilder> modifiedParts = new SortedDictionary<string, StringBuilder>();
         int numCargoPartsAdded = 0;
         bool visible = false;
-        private PopupDialog popup;
 
         private void Awake()
         {
@@ -75,12 +69,21 @@ namespace KSP_PartVolume
 
                             if (name == "ModuleRCS" || name == "ModuleRCSFX") isRcsPart = true;
                             if (name == "ModuleEngines" || name == "ModuleEnginesFX") isEnginePart = true;
+
+                            //  Check for manned
+                            if (!Settings.manned)
+                            {
+                                int CrewCapacity = 0;
+                                if (current.partConfig.TryGetValue("CrewCapacity", ref CrewCapacity))
+                                {
+                                    if (CrewCapacity > 0)
+                                        continue;
+                                }
+                            }
                         }
                         var res = current.partConfig.GetNodes("RESOURCE");
                         if (nodes.Length == 0 && res.Length > 0 && !Settings.doTanks)
                             continue;
-
-
 
                         stringBuilder = new StringBuilder();
 
@@ -133,67 +136,14 @@ namespace KSP_PartVolume
             File.AppendAllText(VOL_CFG_FILE, stringBuilder.ToString());
 
             stopwatch.Stop();
-            Log.Info("File written to "+ VOL_CFG_FILE);
+            Log.Info("File written to " + VOL_CFG_FILE);
             Log.Info(string.Format("Run in {0}ms", (object)stopwatch.ElapsedMilliseconds));
             if (numCargoPartsAdded > 0)
                 ShowWarning(numCargoPartsAdded);
         }
 
 
-        void AddToolbarButton()
-        {
-            {
-                if (toolbarControl == null)
-                {
-                    toolbarControl = gameObject.AddComponent<ToolbarControl>();
-                    toolbarControl.AddToAllToolbars(ToggleWin, ToggleWin,
-                        ApplicationLauncher.AppScenes.MAINMENU,
-                        MODID,
-                        "partVolButton",
-                        "KSP_PartVolume/PluginData/PartVolume-38",
-                        "KSP_PartVolume/PluginData/PartVolume-24",
-                        MODNAME
-                    );
 
-                }
-            }
-        }
-
-        void ToggleWin()
-        {
-            visible = !visible;
-            if (visible)
-            {
-                Settings.RememberSettings();
-            }
-            else
-            {
-                Settings.SaveConfig();
-            }
-        }
-
-
-        public void ShowWarning(int i = 0)
-        {
-            InputLockManager.SetControlLock(ControlTypes.All, "KSPPartVolume");
-            string dialogMsg = "";
-            if (i > 0)
-                dialogMsg = i + " parts have had their cargo settings changed.  The game needs to be restarted for the changes to take effect";
-            else
-                dialogMsg = "Part Volume setting have been changed.  The game needs to be restarted for the changes to take effect";
-            string windowTitle = "WARNING";
-
-            DialogGUIBase[] options = { new DialogGUIButton("OK", HideCancel) };
-
-            MultiOptionDialog confirmationBox = new MultiOptionDialog("Cargo Changes", dialogMsg, windowTitle, HighLogic.UISkin, options);
-
-            popup = PopupDialog.SpawnPopupDialog(confirmationBox, false, HighLogic.UISkin);
-        }
-
-        public void HideCancel()
-        {
-            InputLockManager.RemoveControlLock("KSPPartVolume");
-        }
 
         private float AdjustedVolume(AvailablePart availPart, float vol, bool isEngine, bool isRcs, out float adj)
         {

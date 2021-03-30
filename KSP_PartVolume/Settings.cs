@@ -13,6 +13,7 @@ namespace KSP_PartVolume
         public static bool doTanks = false;
         public static bool limitSize = true;
         public static float largestAllowablePart = 64000f;
+        public static bool manned = false;
 
         public static float oFiller = 0.1F;
         public static float oScienceFiller = 0.25F;
@@ -21,7 +22,7 @@ namespace KSP_PartVolume
         public static bool oDotanks = false;
         public static bool oLimitSize = true;
         public static float oLargestAllowablePart = 64000f;
-
+        public static bool oManned = manned;
         static internal void RememberSettings()
         {
             oFiller = filler;
@@ -31,7 +32,7 @@ namespace KSP_PartVolume
             oDotanks = doTanks;
             oLimitSize = limitSize;
             oLargestAllowablePart = largestAllowablePart;
-
+            oManned = manned;
         }
         static internal void LoadConfig()
         {
@@ -50,6 +51,7 @@ namespace KSP_PartVolume
             doTanks = node.SafeLoad("doTanks", doTanks);
             limitSize = node.SafeLoad("limitSize", limitSize);
             largestAllowablePart = node.SafeLoad("largestAllowablePart", largestAllowablePart);
+            manned = node.SafeLoad("manned", manned);
         }
 
         static internal void SaveConfig()
@@ -58,12 +60,13 @@ namespace KSP_PartVolume
             ConfigNode configNode1 = new ConfigNode();
             ConfigNode configNode2 = new ConfigNode("PARTVOLUME");
             configNode2.AddValue("filler", filler);
-            configNode2.AddValue("scienceFiller", scienceFiller);
-            configNode2.AddValue("engineFiller", engineFiller);
-            configNode2.AddValue("rcsFiller", rcsFiller);
+            configNode2.AddValue("scienceFiller", scienceFiller.ToString("F2"));
+            configNode2.AddValue("engineFiller", engineFiller.ToString("F2"));
+            configNode2.AddValue("rcsFiller", rcsFiller.ToString("F2"));
             configNode2.AddValue("dotanks", doTanks);
             configNode2.AddValue("limitSize", limitSize);
-            configNode2.AddValue("largestAllowablePart", largestAllowablePart);
+            configNode2.AddValue("largestAllowablePart", largestAllowablePart.ToString("F0"));
+            configNode2.AddValue("manned", manned);
 
             configNode1.AddNode(configNode2);
             configNode1.Save(PartVolume.CFG_FILE);
@@ -74,7 +77,8 @@ namespace KSP_PartVolume
                 oScienceFiller != scienceFiller ||
                 oDotanks != doTanks ||
                 oLimitSize != limitSize ||
-                oLargestAllowablePart != largestAllowablePart)
+                oLargestAllowablePart != largestAllowablePart ||
+                oManned != manned)
             {
                 File.Delete(PartVolume.VOL_CFG_FILE);
                 PartVolume.Instance.ShowWarning();

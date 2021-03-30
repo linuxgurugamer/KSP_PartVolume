@@ -1,5 +1,4 @@
-﻿
-using UnityEngine;
+﻿using UnityEngine;
 using ToolbarControl_NS;
 
 namespace KSP_PartVolume

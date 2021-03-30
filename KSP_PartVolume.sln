@@ -7,9 +7,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KSP_PartVolume", "KSP_PartV
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{CC0E7D97-D9F6-450B-BEA0-9F51A326F105}"
 	ProjectSection(SolutionItems) = preProject
+		buildRelease.bat = buildRelease.bat
 		deploy.bat = deploy.bat
 		jenkins.txt = jenkins.txt
 		KSP_PartVolume.version = KSP_PartVolume.version
+		License.md = License.md
 		README.md = README.md
 	EndProjectSection
 EndProject
