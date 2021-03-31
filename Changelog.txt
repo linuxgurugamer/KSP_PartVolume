@@ -2,3 +2,6 @@ Changelog
 
 0.0.1
 	Initial release
+
+0.0.1.1
+	Fixed issue where a partname with a space was causing a ModuleManager error.  Replaced spaces in partnames with questionmarks per the MM manual

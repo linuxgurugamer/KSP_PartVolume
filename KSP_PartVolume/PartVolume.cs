@@ -156,7 +156,9 @@ namespace KSP_PartVolume
                             if (isEnginePart)
                                 stringBuilder.AppendLine("// Engine module detected");
                             stringBuilder.AppendLine("//");
-                            stringBuilder.AppendLine("@PART[" + urlParts[urlParts.Length - 1] + "]:HAS[!MODULE[ModuleCargoPart]]:Final");
+                            string partName = urlParts[urlParts.Length - 1];
+                            
+                            stringBuilder.AppendLine("@PART[" + partName.Replace(' ', '?') + "]:HAS[!MODULE[ModuleCargoPart]]:Final");
                             stringBuilder.AppendLine("{");
                             stringBuilder.AppendLine("    MODULE");
                             stringBuilder.AppendLine("    {");
