@@ -8,19 +8,25 @@ namespace KSP_PartVolume
     public partial class PartVolume : MonoBehaviour
     {
         int winId = SpaceTuxUtility.WindowHelper.NextWindowId("PartVolSettings");
-        Rect toolbarRect = new Rect(0, 0, 400, 150);
+        Rect partVolSettingsRect = new Rect(0, 0, 400, 150);
 
         void OnGUI()
         {
+            OnGUI2();
             if (visible) 
             {
                 GUI.skin = HighLogic.Skin;
-                toolbarRect = ClickThruBlocker.GUILayoutWindow(winId, toolbarRect, ToolbarWindow, "Part Volume Settings");
+                partVolSettingsRect = ClickThruBlocker.GUILayoutWindow(winId, partVolSettingsRect, ToolbarWindow, "Part Volume Settings");
             }
         }
 
         void ToolbarWindow(int windowID)
         {
+            Settings.doTanks = GUILayout.Toggle(Settings.doTanks, "Include tanks");
+            Settings.manned = GUILayout.Toggle(Settings.manned, "Include manned parts");
+            Settings.doStock = GUILayout.Toggle(Settings.doStock, "Include stock parts");
+            Settings.limitSize = GUILayout.Toggle(Settings.limitSize, "Limit Size");
+
             GUILayout.BeginHorizontal();
             GUILayout.Label("Filler (" + (Settings.filler * 100).ToString("F0") + "%):");
             GUILayout.FlexibleSpace();
@@ -44,17 +50,12 @@ namespace KSP_PartVolume
             GUILayout.FlexibleSpace();
             Settings.rcsFiller = GUILayout.HorizontalSlider(Settings.rcsFiller, 0, 1, GUILayout.Width(250));
             GUILayout.EndHorizontal();
-            Settings.doTanks = GUILayout.Toggle(Settings.doTanks, "Include tanks");
-            Settings.manned = GUILayout.Toggle(Settings.manned, "Include manned parts");
-
-            GUILayout.BeginHorizontal();
-            Settings.limitSize = GUILayout.Toggle(Settings.limitSize, "Limit Size");
-            GUILayout.EndHorizontal();
             if (Settings.limitSize)
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Largest Allowable Part: ");
                 var s = GUILayout.TextField(Settings.largestAllowablePart.ToString("F0"), GUILayout.Width(50));
+                GUILayout.Label(" liters");
                 if (float.TryParse(s, out float f))
                 {
                     Settings.largestAllowablePart = f;
@@ -64,7 +65,12 @@ namespace KSP_PartVolume
             GUILayout.Space(20);
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button("Save & Close", GUILayout.Width(90)))
+            if (GUILayout.Button("Reset to Default"))
+            {
+                Settings.ResetToDefaults();
+            }
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Save & Close", GUILayout.Width(120)))
             {
                 visible = false;
                 Settings.SaveConfig();

@@ -16,7 +16,8 @@ namespace KSP_PartVolume
         public static Log Log;
         public static string VOL_CFG_FILE;
         public static string CFG_FILE;
-
+        public static string KIFA;
+        public string RES_BLACKLIST;
         private const string MODDIR = "KSP_PartVolume";
         internal const string MODID = "KSP_PartVolume";
         internal const string MODNAME = "KSP Part Volume";
@@ -24,20 +25,30 @@ namespace KSP_PartVolume
         SortedDictionary<string, StringBuilder> modifiedParts = new SortedDictionary<string, StringBuilder>();
         int numCargoPartsAdded = 0;
         bool visible = false;
+        List<string> blackList;
 
         private void Awake()
         {
             Instance = this;
-            Log = new Log("KSP_PartVolume", KSP_Log.Log.LEVEL.INFO);
+#if DEBUG
+            Log = new Log("KSP_PartVolume", Log.LEVEL.INFO);
+#else
+            Log = new Log("KSP_PartVolume", Log.LEVEL.ERROR);
+#endif
             VOL_CFG_FILE = KSPUtil.ApplicationRootPath + "GameData/partVolumes.cfg";
             CFG_FILE = KSPUtil.ApplicationRootPath + "GameData/" + MODDIR + "/PluginData/KSP_PartVolume.cfg";
+            KIFA = KSPUtil.ApplicationRootPath + "GameData/KerbalInventoryForAll/AllowModPartsInStock.cfg";
+            RES_BLACKLIST = KSPUtil.ApplicationRootPath + "GameData/" + MODDIR + "/PluginData/ResourceBlacklist.txt";
+
+            var blacklistFile = File.ReadAllLines(RES_BLACKLIST);
+            blackList = new List<string>(blacklistFile);
         }
 
         public void Start()
         {
-            AddToolbarButton();
             Settings.LoadConfig();
-
+            if (CheckForKIFA())
+                return;
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
             List<AvailablePart> loadedParts = PartLoader.Instance.loadedParts;
@@ -60,12 +71,21 @@ namespace KSP_PartVolume
                         bool isCargoPart = false;
                         bool isRcsPart = false;
                         bool isEnginePart = false;
+                        ConfigNode currentCargoPart = null;
 
-                        var nodes = current.partConfig.GetNodes("MODULE");
-                        for (int i = 0; i < nodes.Length; i++)
+                        string[] urlParts = current.partUrl.Split('/');
+
+                        if (!Settings.doStock)
                         {
-                            var name = nodes[i].GetValue("name");
-                            if (name == "ModuleCargoPart") isCargoPart = true;
+                            if (urlParts[0] == "Squad" || urlParts[0] == "SquadExpansion")
+                                continue;
+                        }
+                        var moduleNodes = current.partConfig.GetNodes("MODULE");
+                        for (int i = 0; i < moduleNodes.Length; i++)
+                        {
+                            var name = moduleNodes[i].GetValue("name");
+                            if (name == "ModuleCargoPart")
+                                isCargoPart = true;
 
                             if (name == "ModuleRCS" || name == "ModuleRCSFX") isRcsPart = true;
                             if (name == "ModuleEngines" || name == "ModuleEnginesFX") isEnginePart = true;
@@ -81,10 +101,29 @@ namespace KSP_PartVolume
                                 }
                             }
                         }
-                        var res = current.partConfig.GetNodes("RESOURCE");
-                        if (nodes.Length == 0 && res.Length > 0 && !Settings.doTanks)
-                            continue;
+                        var resNodes = current.partConfig.GetNodes("RESOURCE");
+                        float mass = 0;
+                        current.partConfig.TryGetValue("mass", ref mass);
+                        float totalResMass = 0;
 
+                        if (!Settings.doTanks)
+                        {
+                            foreach (var resNode in resNodes)
+                            {
+                                var name = resNode.GetValue("name");
+                                if (blackList.Contains(name))
+                                    continue;
+                                float maxAmount = 0;
+                                resNode.TryGetValue("maxAmount", ref maxAmount);
+                                var definition = PartResourceLibrary.Instance.GetDefinition(name);
+                                var density = definition.density;
+                                float resMass = maxAmount * density;
+                                totalResMass += resMass;
+                            }
+
+                            if (totalResMass > mass)
+                                continue;
+                        }
                         stringBuilder = new StringBuilder();
 
                         Bounds bounds = default(Bounds);
@@ -93,26 +132,31 @@ namespace KSP_PartVolume
 
                         if (!isCargoPart)
                         {
-                            numCargoPartsAdded++;
                             float vol = (float)(bounds.size.x * bounds.size.y * bounds.size.z) * 1000f;
 
                             if (vol > Settings.largestAllowablePart && Settings.limitSize)
                                 continue;
 
+                            numCargoPartsAdded++;
 
-                            stringBuilder.AppendLine("// " + current.partUrl);
-                            stringBuilder.AppendLine(string.Format("// Bounding Box Size: {0} liters", vol));
 
                             var adjVol = AdjustedVolume(current, vol, isEnginePart, isRcsPart, out float adj);
 
-                            string[] strArray = current.partUrl.Split('/');
+                            if (currentCargoPart != null)
+                            {
+                                currentCargoPart.SetValue("packedVolume", adjVol.ToString("F0"));
+                            }
+
+
+                            stringBuilder.AppendLine("// " + current.partUrl);
+                            stringBuilder.AppendLine(string.Format("// Bounding Box Size: {0} liters", vol));
                             stringBuilder.AppendLine("// Volume adjustment: " + (adj * 100).ToString("F0") + "%");
                             if (isRcsPart)
                                 stringBuilder.AppendLine("// RCS module detected");
                             if (isEnginePart)
                                 stringBuilder.AppendLine("// Engine module detected");
                             stringBuilder.AppendLine("//");
-                            stringBuilder.AppendLine("@PART[" + strArray[strArray.Length - 1] + "]:HAS[!MODULE[ModuleCargoPart]]:Final");
+                            stringBuilder.AppendLine("@PART[" + urlParts[urlParts.Length - 1] + "]:HAS[!MODULE[ModuleCargoPart]]:Final");
                             stringBuilder.AppendLine("{");
                             stringBuilder.AppendLine("    MODULE");
                             stringBuilder.AppendLine("    {");
@@ -142,6 +186,15 @@ namespace KSP_PartVolume
                 ShowWarning(numCargoPartsAdded);
         }
 
+        bool CheckForKIFA()
+        {
+            if (File.Exists(KIFA))
+            {
+                ShowKIFAWarning("KerbalInventoryForAll/AllowModPartsInStock.cfg exists.\nKSP_PartVolume will not work if this file exists");
+                return true;
+            }
+            return false;
+        }
 
 
 
