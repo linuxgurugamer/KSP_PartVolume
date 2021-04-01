@@ -77,7 +77,7 @@ namespace KSP_PartVolume
             configNode2.AddValue("scienceFiller", scienceFiller.ToString("F2"));
             configNode2.AddValue("engineFiller", engineFiller.ToString("F2"));
             configNode2.AddValue("rcsFiller", rcsFiller.ToString("F2"));
-            configNode2.AddValue("dotanks", doTanks);
+            configNode2.AddValue("doTanks", doTanks);
             configNode2.AddValue("limitSize", limitSize);
             configNode2.AddValue("largestAllowablePart", largestAllowablePart.ToString("F0"));
             configNode2.AddValue("manned", manned);
