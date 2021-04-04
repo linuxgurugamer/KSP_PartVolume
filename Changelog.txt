@@ -8,3 +8,9 @@ Changelog
 
 0.0.1.2
 	Fixed the saving/loading of the DoTanks option 
+
+0.0.2
+	Changed output to write commented data for all parts to the cfg file. 
+	New parts now don't require a restart of the game
+	Removed popup requiring restart after new parts added
+	Added packedVolume to PAW for parts which have been modified

@@ -63,10 +63,12 @@
       <DependentUpon>AssemblyVersion.tt</DependentUpon>
     </Compile>
     <Compile Include="InstallChecker.cs" />
+    <Compile Include="KSPPartVolumeModule.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="PartVolume.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SettingsWin.cs" />
+    <Compile Include="Statics.cs" />
     <Compile Include="Toolbar.cs" />
     <Compile Include="WarningDialog.cs" />
   </ItemGroup>
