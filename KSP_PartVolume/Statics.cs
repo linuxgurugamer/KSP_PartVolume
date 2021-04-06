@@ -8,7 +8,7 @@ namespace KSP_PartVolume
     {
         internal static SortedDictionary<string, PartModification> modifiedParts = new SortedDictionary<string, PartModification>();
 
-        internal static void DelModCargoPart(Part part)
+        internal static void Check4DelModCargoPart(Part part)
         {
             PartModule modToDel = null;
             foreach (PartModule module in part.Modules)
@@ -34,23 +34,8 @@ namespace KSP_PartVolume
             {
                 part.RemoveModule(modToDel);
                 Log.Info("Deleting ModuleCargoPart from part: " + part.name);
-
-                AvailablePart.ModuleInfo mitodel = null;
-                for (int i = part.partInfo.moduleInfos.Count - 1; i >= 0; --i)
-                {
-                    AvailablePart.ModuleInfo info = part.partInfo.moduleInfos[i];
-                    if (info.moduleName == Localizer.Format("#autoLOC_8002221")) // Cargo Part
-                    {
-                        mitodel = info;
-                        break;
-                    }
-                }
-                if (mitodel != null)
-                {
-                    part.partInfo.moduleInfos.Remove(mitodel);
-                }
             }
-        }
+            }
 
     }
 }

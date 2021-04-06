@@ -12,5 +12,9 @@ Changelog
 0.0.2
 	Changed output to write commented data for all parts to the cfg file. 
 	New parts now don't require a restart of the game
+	Added new part module to udpate the packedVolume
 	Removed popup requiring restart after new parts added
 	Added packedVolume to PAW for parts which have been modified
+
+0.0.2.1
+	Fixed nullrefs caused by UniversalStorage.GetInfo() begin called by ModuleCargoPart during initialization

@@ -212,7 +212,14 @@ namespace KSP_PartVolume
                                         AvailablePart.ModuleInfo info = current.moduleInfos[i];
                                         if (info.moduleName == Localizer.Format("#autoLOC_8002221")) // Cargo Part
                                         {
-                                            info.info = mcp.GetInfo();
+                                            try
+                                            {
+                                                info.info = mcp.GetInfo();
+                                            } catch (Exception ex)
+                                            {
+                                                Log.Error("PartInfo.Start, Part: "+ current.partUrl + ", Exception caught in ModuleCargoPart.GetInfo, exception: " + ex.Message + "\n" + ex.StackTrace);
+                                                info.info = "KSP_PartVolume error";
+                                            }
                                             break;
                                         }
                                     }
@@ -242,7 +249,7 @@ namespace KSP_PartVolume
                             Part part = UnityEngine.Object.Instantiate(current.partPrefab);
                             part.gameObject.SetActive(value: false);
 
-                            Statics.DelModCargoPart(part);
+                            Statics.Check4DelModCargoPart(part);
                             Destroy(part);
 #endif
                         }

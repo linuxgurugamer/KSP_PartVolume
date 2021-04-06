@@ -55,6 +55,9 @@
     <Reference Include="ToolbarControl">
       <HintPath>R:\KSP_1.10.1_dev\GameData\001_ToolbarControl\Plugins\ToolbarControl.dll</HintPath>
     </Reference>
+    <Reference Include="UniversalStorage2">
+      <HintPath>R:\KSP_1.11.2\GameData\UniversalStorage2\Plugins\UniversalStorage2.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyVersion.cs">
