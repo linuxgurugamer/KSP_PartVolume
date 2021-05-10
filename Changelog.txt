@@ -18,3 +18,6 @@ Changelog
 
 0.0.2.1
 	Fixed nullrefs caused by UniversalStorage.GetInfo() begin called by ModuleCargoPart during initialization
+
+0.0.2.2
+	Fixed error caused by parens in file name

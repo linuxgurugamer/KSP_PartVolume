@@ -187,7 +187,8 @@ namespace KSP_PartVolume
                         if (!containsCrew && !isTank && !sizeTooBig && !contains_ModuleCargoPart && !isStock)
                         {
                             string partName = urlParts[urlParts.Length - 1];
-                            stringBuilder.AppendLine("@PART[" + partName.Replace(' ', '?') + "]:HAS[!MODULE[ModuleCargoPart]]:Final");
+                            string adjName = partName.Replace(' ', '?').Replace('(', '?').Replace(')', '?');
+                            stringBuilder.AppendLine("@PART[" + adjName + "]:HAS[!MODULE[ModuleCargoPart]]:Final");
                             stringBuilder.AppendLine("{");
                             stringBuilder.AppendLine("    MODULE");
                             stringBuilder.AppendLine("    {");
