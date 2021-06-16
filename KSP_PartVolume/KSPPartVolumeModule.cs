@@ -19,6 +19,26 @@ namespace KSP_PartVolume
                 Log.Info("KSPPartVolumeModule.Start");
                 Statics.Check4DelModCargoPart(part);
 
+#if false
+                ProtoPartSnapshot pps = part.protoPartSnapshot;
+                foreach (var m in pps.modules)
+                {
+                    if (m.moduleName == "ModuleCargoPart")
+                    {
+                        Log.Info("ModuleCargoPart found");
+                        var currentCargoPart = m.moduleValues;
+                        Log.Info("ModuleCargoPart.configs: " + currentCargoPart);
+                        if (currentCargoPart.HasValue("packedVolume"))
+                        {
+                            var s = currentCargoPart.GetValue("packedVolume");
+                            Log.Info("packedVolume found: " + s);
+                            currentCargoPart.SetValue("packedVolume", packedVolume.ToString("F0"));
+                        }
+                        else
+                            Log.Error("packedVolume not found");
+                    }
+                }
+#endif
 
 #if false
                 var partConfig = part.partInfo.partConfig;
