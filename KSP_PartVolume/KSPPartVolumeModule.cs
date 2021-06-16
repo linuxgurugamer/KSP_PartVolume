@@ -14,11 +14,48 @@ namespace KSP_PartVolume
 
         public void Start()
         {
-            if (Statics.modifiedParts.ContainsKey(this.part.partInfo.partUrl))
+            if (HighLogic.LoadedSceneIsFlight && Statics.modifiedParts.ContainsKey(this.part.partInfo.partUrl))
             {
-                if (HighLogic.LoadedSceneIsFlight)
-                    Statics.Check4DelModCargoPart(part);
+                Log.Info("KSPPartVolumeModule.Start");
+                Statics.Check4DelModCargoPart(part);
+
+
+#if false
+                var partConfig = part.partInfo.partConfig;
+                if (partConfig != null)
+                {
+                    Log.Info("partconfig found");
+                    var moduleNodes = partConfig.GetNodes("MODULE");
+                    Log.Info("partConfig: " + moduleNodes);
+                    Log.Info("moduleNodes.Count: " + moduleNodes.Length);
+                    for (int i = 0; i < moduleNodes.Length; i++)
+                    {
+                        Log.Info("name: " + moduleNodes[i].GetValue("name"));
+                        if (moduleNodes[i].GetValue("name") == "ModuleCargoPart")
+                        {
+                            Log.Info("ModuleCargoPart found");
+                            var currentCargoPart = moduleNodes[i];
+
+                            if (currentCargoPart.HasValue("packedVolume"))
+                            {
+                                var s = currentCargoPart.GetValue("packedVolume");
+                                Log.Info("packedVolume found: " + s);
+                                currentCargoPart.SetValue("packedVolume", packedVolume.ToString("F0"));
+                            }
+                            else
+                                Log.Error("packedVolume not found");
+                        }
+                    }
+                }
+#endif
             }
         }
+
+#if false
+        public string GetInfo()
+        {
+            return "PartVolumeModule, packedVolume: " + packedVolume.ToString("F3");
+        }
+#endif
     }
 }

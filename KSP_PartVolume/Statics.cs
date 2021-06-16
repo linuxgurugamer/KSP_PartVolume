@@ -19,13 +19,8 @@ namespace KSP_PartVolume
                     if (modifiedParts.ContainsKey(part.partInfo.partUrl))
                     {
                         mcp.packedVolume = modifiedParts[part.partInfo.partUrl].packedVolume;
-                        Log.Info("packedVolume: " + mcp.packedVolume);
                         if (modifiedParts[part.partInfo.partUrl].delModuleCargoPart || modifiedParts[part.partInfo.partUrl].packedVolume == -999)
                             modToDel = module;
-                    }
-                    else
-                    {
-                        //modToDel = module;
                     }
                     break;
                 }
@@ -35,7 +30,7 @@ namespace KSP_PartVolume
                 part.RemoveModule(modToDel);
                 Log.Info("Deleting ModuleCargoPart from part: " + part.name);
             }
-            }
+        }
 
     }
 }

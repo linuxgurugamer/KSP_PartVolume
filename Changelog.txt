@@ -21,3 +21,6 @@ Changelog
 
 0.0.2.2
 	Fixed error caused by parens in file name
+
+0.0.2.3
+	Added warning dialog about need to restart game after new parts have been detected

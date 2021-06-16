@@ -39,8 +39,8 @@ namespace KSP_PartVolume
         internal const string MODID = "KSP_PartVolume";
         internal const string MODNAME = "KSP Part Volume";
 
-        // internal static SortedDictionary<string, PartModification> modifiedParts = new SortedDictionary<string, PartModification>();
         bool visible = false;
+        static bool RestartWindowVisible = false;
         List<string> blackList;
 
         private void Awake()
@@ -65,9 +65,10 @@ namespace KSP_PartVolume
             Settings.LoadConfig();
             if (CheckForKIFA())
                 return;
+            Start2();
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
-            List<AvailablePart> loadedParts = PartLoader.Instance.loadedParts;
+            List<AvailablePart> loadedParts = PartLoader.LoadedPartsList; // PartLoader.Instance.loadedParts;
 
             StringBuilder stringBuilder;
 
@@ -167,8 +168,14 @@ namespace KSP_PartVolume
 
                         if (currentCargoPart != null)
                         {
+                            Log.Info("currentCargoPart: " + current.name);
                             if (currentCargoPart.HasValue("packedVolume"))
+                            {
+                                string s = currentCargoPart.GetValue("packedVolume");
                                 currentCargoPart.SetValue("packedVolume", adjVol.ToString("F0"));
+                                Log.Info("currentCargoPart: packedVolume: " + s + ", newPackedVolume: " + adjVol);
+
+                            }
                             else
                                 Log.Error("packedVolume not found");
                         }
@@ -197,6 +204,7 @@ namespace KSP_PartVolume
                             stringBuilder.AppendLine("    }");
                             stringBuilder.AppendLine("}");
 
+                            RestartWindowVisible = true;
 
                             Part part = UnityEngine.Object.Instantiate(current.partPrefab);
                             part.gameObject.SetActive(value: false);
@@ -216,9 +224,10 @@ namespace KSP_PartVolume
                                             try
                                             {
                                                 info.info = mcp.GetInfo();
-                                            } catch (Exception ex)
+                                            }
+                                            catch (Exception ex)
                                             {
-                                                Log.Error("PartInfo.Start, Part: "+ current.partUrl + ", Exception caught in ModuleCargoPart.GetInfo, exception: " + ex.Message + "\n" + ex.StackTrace);
+                                                Log.Error("PartInfo.Start, Part: " + current.partUrl + ", Exception caught in ModuleCargoPart.GetInfo, exception: " + ex.Message + "\n" + ex.StackTrace);
                                                 info.info = "KSP_PartVolume error";
                                             }
                                             break;
@@ -302,5 +311,8 @@ namespace KSP_PartVolume
             adj = num;
             return (float)Math.Floor(vol * (1.0 + num) + 1.0);
         }
+
+
+
     }
 }

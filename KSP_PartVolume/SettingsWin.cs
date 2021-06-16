@@ -8,8 +8,15 @@ namespace KSP_PartVolume
     public partial class PartVolume : MonoBehaviour
     {
         int winId = SpaceTuxUtility.WindowHelper.NextWindowId("PartVolSettings");
+        int restartWinId = SpaceTuxUtility.WindowHelper.NextWindowId("restartWinId");
         Rect partVolSettingsRect = new Rect(0, 0, 400, 150);
+        Rect RestartWindowRect = new Rect(0, 0, 500, 150);
 
+        void Start2()
+        {
+            RestartWindowRect.x = (Screen.width - RestartWindowRect.width) / 2;
+            RestartWindowRect.y = (Screen.height -RestartWindowRect.height) / 2;
+        }
         void OnGUI()
         {
             OnGUI2();
@@ -18,8 +25,33 @@ namespace KSP_PartVolume
                 GUI.skin = HighLogic.Skin;
                 partVolSettingsRect = ClickThruBlocker.GUILayoutWindow(winId, partVolSettingsRect, ToolbarWindow, "Part Volume Settings");
             }
+            if (RestartWindowVisible)
+            {
+                RestartWindowRect = ClickThruBlocker.GUILayoutWindow(restartWinId, RestartWindowRect, RestartWindow, "Restart Game");
+            }
         }
 
+        void RestartWindow(int winId)
+        {
+            GUILayout.BeginVertical();
+            GUILayout.Label("New parts have been detected by KSP PartVolume");
+            GUILayout.Label("The game will need to be restarted to have the changes properly implemented.");
+            GUILayout.Label("Until that is done, the stock inventory system will not work properly with the newly-detected parts");
+            GUILayout.Space(20);
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Exit Game now!", GUILayout.Width(180)))
+            {
+                Application.Quit();
+            }
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Ignore and Continue", GUILayout.Width(180)))
+                RestartWindowVisible = false;
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
+            GUI.DragWindow();
+        }
         void ToolbarWindow(int windowID)
         {
             Settings.doTanks = GUILayout.Toggle(Settings.doTanks, "Include tanks");
@@ -85,7 +117,6 @@ namespace KSP_PartVolume
             GUILayout.EndHorizontal();
 
             GUI.DragWindow();
-
         }
     }
 }
