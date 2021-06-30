@@ -24,3 +24,6 @@ Changelog
 
 0.0.2.3
 	Added warning dialog about need to restart game after new parts have been detected
+
+0.0.2.4
+	Fixed partVolumes.cfg file constantly being appended to after every start

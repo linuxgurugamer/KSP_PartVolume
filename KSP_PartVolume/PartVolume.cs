@@ -274,11 +274,13 @@ namespace KSP_PartVolume
             }
 
             stringBuilder = new StringBuilder();
+            if (Statics.modifiedParts.Count > 0)
+            {
+                foreach (var d in Statics.modifiedParts)
+                    stringBuilder.Append(d.Value.cfg.ToString());
 
-            foreach (var d in Statics.modifiedParts)
-                stringBuilder.Append(d.Value.cfg.ToString());
-
-            File.AppendAllText(VOL_CFG_FILE, stringBuilder.ToString());
+                File.WriteAllText(VOL_CFG_FILE, stringBuilder.ToString());
+            }
 
             stopwatch.Stop();
             Log.Info("File written to " + VOL_CFG_FILE);
