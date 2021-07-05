@@ -72,6 +72,8 @@ namespace KSP_PartVolume
 
             StringBuilder stringBuilder;
 
+            bool fileExists = File.Exists(VOL_CFG_FILE);
+
             Log.Info("Finding Parts Volume....");
             using (List<AvailablePart>.Enumerator partEnumerator = loadedParts.GetEnumerator())
             {
@@ -181,18 +183,20 @@ namespace KSP_PartVolume
                         }
 
 
-                        stringBuilder.AppendLine("// " + current.partUrl);
-                        stringBuilder.AppendLine(string.Format("// Bounding Box Size: {0} liters", vol));
-                        stringBuilder.AppendLine("// Volume adjustment: " + (adj * 100).ToString("F0") + "%");
+                        StringBuilder tmp = new StringBuilder();
+                        tmp.AppendLine("// " + current.partUrl);
+                        tmp.AppendLine(string.Format("// Bounding Box Size: {0} liters", vol));
+                        tmp.AppendLine("// Volume adjustment: " + (adj * 100).ToString("F0") + "%");
                         if (isRcsPart)
-                            stringBuilder.AppendLine("// RCS module detected");
+                            tmp.AppendLine("// RCS module detected");
                         if (isEnginePart)
-                            stringBuilder.AppendLine("// Engine module detected");
-                        stringBuilder.AppendLine("//");
+                            tmp.AppendLine("// Engine module detected");
+                        tmp.AppendLine("//");
 
 
                         if (!containsCrew && !isTank && !sizeTooBig && !contains_ModuleCargoPart && !isStock)
                         {
+                            stringBuilder.Append(tmp);
                             string partName = urlParts[urlParts.Length - 1];
                             string adjName = partName.Replace(' ', '?').Replace('(', '?').Replace(')', '?');
                             stringBuilder.AppendLine("@PART[" + adjName + "]:HAS[!MODULE[ModuleCargoPart]]:Final");
@@ -240,34 +244,39 @@ namespace KSP_PartVolume
                         }
                         else
                         {
-                            stringBuilder.AppendLine("//   Bypass reasons:");
-                            if (containsCrew)
-                                stringBuilder.AppendLine("//      contains crew ");
-                            if (isTank)
-                                stringBuilder.AppendLine("//      is tank");
-                            if (sizeTooBig)
-                                stringBuilder.AppendLine("//      size exceeds largestAllowablePart: " + Settings.largestAllowablePart);
-                            if (contains_ModuleCargoPart)
-                                stringBuilder.AppendLine("//      contains ModuleCargoPart");
-                            if (isStock)
-                                stringBuilder.AppendLine("//      is Stock");
-                            stringBuilder.AppendLine("//");
+                            if (!fileExists)
+                            {
+                                stringBuilder.Append(tmp);
+                                stringBuilder.AppendLine("//   Bypass reasons:");
+                                if (containsCrew)
+                                    stringBuilder.AppendLine("//      contains crew ");
+                                if (isTank)
+                                    stringBuilder.AppendLine("//      is tank");
+                                if (sizeTooBig)
+                                    stringBuilder.AppendLine("//      size exceeds largestAllowablePart: " + Settings.largestAllowablePart);
+                                if (contains_ModuleCargoPart)
+                                    stringBuilder.AppendLine("//      contains ModuleCargoPart");
+                                if (isStock)
+                                    stringBuilder.AppendLine("//      is Stock");
+                                stringBuilder.AppendLine("//");
 
-                            adjVol = -999;
+                                adjVol = -999;
 #if true
-                            current.partConfig.RemoveNode(currentCargoPart);
-                            Part part = UnityEngine.Object.Instantiate(current.partPrefab);
-                            part.gameObject.SetActive(value: false);
+                                current.partConfig.RemoveNode(currentCargoPart);
+                                Part part = UnityEngine.Object.Instantiate(current.partPrefab);
+                                part.gameObject.SetActive(value: false);
 
-                            Statics.Check4DelModCargoPart(part);
-                            Destroy(part);
+                                Statics.Check4DelModCargoPart(part);
+                                Destroy(part);
 #endif
+                            }
                         }
                         if (!Statics.modifiedParts.ContainsKey(current.partUrl))
                             Statics.modifiedParts.Add(current.partUrl, new PartModification(stringBuilder, adjVol, adjVol == -999));
                         else
                             Log.Error("modifiedParts already contains: " + current.partUrl);
-                        stringBuilder.AppendLine("// ----------------------------------------------------------------------");
+                        if (!fileExists)
+                            stringBuilder.AppendLine("// ----------------------------------------------------------------------");
 
                     }
                 }
@@ -279,7 +288,7 @@ namespace KSP_PartVolume
                 foreach (var d in Statics.modifiedParts)
                     stringBuilder.Append(d.Value.cfg.ToString());
 
-                File.WriteAllText(VOL_CFG_FILE, stringBuilder.ToString());
+                File.AppendAllText(VOL_CFG_FILE, stringBuilder.ToString());
             }
 
             stopwatch.Stop();

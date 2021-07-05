@@ -27,3 +27,6 @@ Changelog
 
 0.0.2.4
 	Fixed partVolumes.cfg file constantly being appended to after every start
+
+0.0.2.5
+	Fixed partVolumes.cfg getting deleted every other run
