@@ -38,10 +38,12 @@ namespace KSP_PartVolume
         private const string MODDIR = "KSP_PartVolume";
         internal const string MODID = "KSP_PartVolume";
         internal const string MODNAME = "KSP Part Volume";
+        internal const string PARTBLACKLIST = "PARTVOLUME_BLACKLIST";
 
         bool visible = false;
         static bool RestartWindowVisible = false;
-        List<string> blackList;
+        List<string> resourceBlackList;
+        List<String> partBlacklist;
 
         private void Awake()
         {
@@ -57,7 +59,18 @@ namespace KSP_PartVolume
             RES_BLACKLIST = KSPUtil.ApplicationRootPath + "GameData/" + MODDIR + "/PluginData/ResourceBlacklist.txt";
 
             var blacklistFile = File.ReadAllLines(RES_BLACKLIST);
-            blackList = new List<string>(blacklistFile);
+            resourceBlackList = new List<string>(blacklistFile);
+            partBlacklist = new List<string>();
+
+            ConfigNode[] partBlacklistNodes = GameDatabase.Instance.GetConfigNodes(PARTBLACKLIST);
+            foreach (var n in partBlacklistNodes)
+            {
+                var v = n.GetValues("blacklistPart");
+                foreach (var v1 in v)
+                    partBlacklist.Add(v1);
+            }
+            foreach (var p in partBlacklist)
+                Log.Info("Part blacklisted: " + p);
         }
 
         public void Start()
@@ -84,7 +97,8 @@ namespace KSP_PartVolume
                     //
                     // Don't do the flag or any kerbalEVA
                     //
-                    if ((current.name.Length != 4 || current.name != "flag") &&
+
+                    if (!partBlacklist.Contains(current.name) &&
                         (current.name.Length < 9 || current.name.Substring(0, 9) != "kerbalEVA"))
                     {
                         bool contains_ModuleCargoPart = false;
@@ -144,7 +158,7 @@ namespace KSP_PartVolume
                             {
                                 var name = resNode.GetValue("name");
 
-                                if (blackList.Contains(name))
+                                if (resourceBlackList.Contains(name))
                                     continue;
 
                                 float maxAmount = 0;

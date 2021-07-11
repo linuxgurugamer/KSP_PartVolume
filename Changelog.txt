@@ -33,3 +33,7 @@ Changelog
 
 0.0.2.6
 	Added check for missing resource (if resource in tank/engine doesn't exist, ignores it now)
+
+0.0.2.7
+	Added Part Blacklist, will now ignore parts listed.  Look at the file PartBlacklist.cfg for an example
+	Replaced check for part called "flag" with the blacklist file
