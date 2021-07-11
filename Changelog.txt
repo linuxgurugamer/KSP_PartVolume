@@ -30,3 +30,6 @@ Changelog
 
 0.0.2.5
 	Fixed partVolumes.cfg getting deleted every other run
+
+0.0.2.6
+	Added check for missing resource (if resource in tank/engine doesn't exist, ignores it now)

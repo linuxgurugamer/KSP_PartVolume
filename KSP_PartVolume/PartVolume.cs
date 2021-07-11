@@ -110,6 +110,7 @@ namespace KSP_PartVolume
                         for (int i = 0; i < moduleNodes.Length; i++)
                         {
                             var name = moduleNodes[i].GetValue("name");
+
                             if (name == "ModuleCargoPart")
                             {
                                 contains_ModuleCargoPart = true;
@@ -142,14 +143,19 @@ namespace KSP_PartVolume
                             foreach (var resNode in resNodes)
                             {
                                 var name = resNode.GetValue("name");
+
                                 if (blackList.Contains(name))
                                     continue;
+
                                 float maxAmount = 0;
                                 resNode.TryGetValue("maxAmount", ref maxAmount);
                                 var definition = PartResourceLibrary.Instance.GetDefinition(name);
-                                var density = definition.density;
-                                float resMass = maxAmount * density;
-                                totalResMass += resMass;
+                                if (definition != null)
+                                {
+                                    var density = definition.density;
+                                    float resMass = maxAmount * density;
+                                    totalResMass += resMass;
+                                }
                             }
 
                             if (totalResMass > mass)
