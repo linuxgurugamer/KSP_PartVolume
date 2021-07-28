@@ -37,3 +37,8 @@ Changelog
 0.0.2.7
 	Added Part Blacklist, will now ignore parts listed.  Look at the file PartBlacklist.cfg for an example
 	Replaced check for part called "flag" with the blacklist file
+
+0.0.2.8
+	Renamed DLL for CKAN compatibility
+	Added AssemblyFileVersion
+	Updated version file for 1.12

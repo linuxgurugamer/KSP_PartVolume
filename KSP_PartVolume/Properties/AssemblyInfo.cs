@@ -16,5 +16,5 @@ using System.Runtime.Versioning;
 [assembly: AssemblyTrademark("")]
 [assembly: ComVisible(false)]
 [assembly: Guid("c05a6d01-0e28-4a6d-8661-bcc612dbcbac")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+//[assembly: AssemblyFileVersion("1.0.0.0")]
 //[assembly: AssemblyVersion("1.0.0.0")]
