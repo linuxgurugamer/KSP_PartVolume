@@ -7,6 +7,7 @@ using UnityEngine;
 using KSP_Log;
 using KSP.Localization;
 
+
 namespace KSP_PartVolume
 {
 
@@ -39,11 +40,13 @@ namespace KSP_PartVolume
         internal const string MODID = "KSP_PartVolume";
         internal const string MODNAME = "KSP Part Volume";
         internal const string PARTBLACKLIST = "PARTVOLUME_BLACKLIST";
+        internal const string PARTWHITELIST = "PARTVOLUME_WHITELIST";
 
         bool visible = false;
         static bool RestartWindowVisible = false;
         List<string> resourceBlackList;
         List<String> partBlacklist;
+        List<String> partWhitelist;
 
         private void Awake()
         {
@@ -61,6 +64,7 @@ namespace KSP_PartVolume
             var blacklistFile = File.ReadAllLines(RES_BLACKLIST);
             resourceBlackList = new List<string>(blacklistFile);
             partBlacklist = new List<string>();
+            partWhitelist = new List<String>();
 
             ConfigNode[] partBlacklistNodes = GameDatabase.Instance.GetConfigNodes(PARTBLACKLIST);
             foreach (var n in partBlacklistNodes)
@@ -71,6 +75,18 @@ namespace KSP_PartVolume
             }
             foreach (var p in partBlacklist)
                 Log.Info("Part blacklisted: " + p);
+
+
+            ConfigNode[] partWhitelistNodes = GameDatabase.Instance.GetConfigNodes(PARTWHITELIST);
+            foreach (var n in partWhitelistNodes)
+            {
+                var v = n.GetValues("whitelistPart");
+                foreach (var v1 in v)
+                    partWhitelist.Add(v1);
+            }
+            foreach (var p in partWhitelist)
+                Log.Info("Part whitelisted: " + p);
+
         }
 
         public void Start()
@@ -102,6 +118,7 @@ namespace KSP_PartVolume
                         (current.name.Length < 9 || current.name.Substring(0, 9) != "kerbalEVA"))
                     {
                         bool contains_ModuleCargoPart = false;
+                        bool contains_ModuleInventoryPart = false;
                         bool contains_KSPPartVolumeModule = false;
 
                         bool containsCrew = false;
@@ -118,7 +135,8 @@ namespace KSP_PartVolume
                         if (!Settings.doStock)
                         {
                             if (urlParts[0] == "Squad" || urlParts[0] == "SquadExpansion")
-                                isStock = true;
+                                if (!partWhitelist.Contains(urlParts[urlParts.Length - 1]))
+                                    isStock = true;
                         }
                         var moduleNodes = current.partConfig.GetNodes("MODULE");
                         for (int i = 0; i < moduleNodes.Length; i++)
@@ -130,6 +148,8 @@ namespace KSP_PartVolume
                                 contains_ModuleCargoPart = true;
                                 currentCargoPart = moduleNodes[i];
                             }
+                            if (name == "ModuleInventoryPart")
+                                contains_ModuleInventoryPart = true;
                             if (name == "KSPPartVolumeModule") contains_KSPPartVolumeModule = true;
                             if (name == "ModuleRCS" || name == "ModuleRCSFX") isRcsPart = true;
                             if (name == "ModuleEngines" || name == "ModuleEnginesFX") isEnginePart = true;
@@ -181,12 +201,25 @@ namespace KSP_PartVolume
                         foreach (Bounds rendererBound in PartGeometryUtil.GetRendererBounds((Part)current.partPrefab))
                             bounds.Encapsulate(rendererBound);
 
+#if false
+                        Bounds colliderBounds = default(Bounds);
+                        foreach (Bounds rendererBound in PartGeometryUtil.GetPartColliderBounds((Part)current.partPrefab))
+                            colliderBounds.Encapsulate(rendererBound);
+
+                        Bounds allBounds = default(Bounds);
+                        var a = PartGeometryUtil.GetPartColliderBounds(current.partPrefab);
+                        allBounds = PartGeometryUtil.MergeBounds(a, current.iconPrefab.transform.root);
+#endif
+
                         float vol = (float)(bounds.size.x * bounds.size.y * bounds.size.z) * 1000f;
 
                         if (vol > Settings.largestAllowablePart && Settings.limitSize)
                             sizeTooBig = true;
 
                         var adjVol = AdjustedVolume(current, vol, isEnginePart, isRcsPart, out float adj);
+
+                        bool isManipulableOnly = false;
+                        bool isKSP_PartVolumeModule = false;
 
                         if (currentCargoPart != null)
                         {
@@ -197,14 +230,23 @@ namespace KSP_PartVolume
                                 currentCargoPart.SetValue("packedVolume", adjVol.ToString("F0"));
                                 Log.Info("currentCargoPart: packedVolume: " + s + ", newPackedVolume: " + adjVol);
 
+                                var v = float.Parse(s);
+                                if (v <= 0)
+                                    isManipulableOnly = true;
+
+                                isKSP_PartVolumeModule = currentCargoPart.HasValue("KSP_PartVolume");
                             }
                             else
                                 Log.Error("packedVolume not found");
                         }
-
+                        if (contains_ModuleInventoryPart)
+                            adjVol = -1;
 
                         StringBuilder tmp = new StringBuilder();
                         tmp.AppendLine("// " + current.partUrl);
+
+                        tmp.AppendLine("// Dimensions: x: " + bounds.size.x.ToString("F2") + ", y: " + bounds.size.y.ToString("F2") + ", z: " + bounds.size.z.ToString("F2"));
+
                         tmp.AppendLine(string.Format("// Bounding Box Size: {0} liters", vol));
                         tmp.AppendLine("// Volume adjustment: " + (adj * 100).ToString("F0") + "%");
                         if (isRcsPart)
@@ -213,18 +255,31 @@ namespace KSP_PartVolume
                             tmp.AppendLine("// Engine module detected");
                         tmp.AppendLine("//");
 
-
-                        if (!containsCrew && !isTank && !sizeTooBig && !contains_ModuleCargoPart && !isStock)
+                        if (!containsCrew && !isTank && !sizeTooBig && !isStock &&
+                            (!contains_ModuleCargoPart ||
+                             (contains_ModuleCargoPart && Settings.processManipulableOnly && isManipulableOnly) ||
+                           (!isKSP_PartVolumeModule && partWhitelist.Contains(urlParts[urlParts.Length - 1]))
+                            ))
                         {
                             stringBuilder.Append(tmp);
                             string partName = urlParts[urlParts.Length - 1];
                             string adjName = partName.Replace(' ', '?').Replace('(', '?').Replace(')', '?');
-                            stringBuilder.AppendLine("@PART[" + adjName + "]:HAS[!MODULE[ModuleCargoPart]]:Final");
-                            stringBuilder.AppendLine("{");
+                            if (contains_ModuleCargoPart)
+                            {
+                                stringBuilder.AppendLine("@PART[" + adjName + "]:Final");
+                                stringBuilder.AppendLine("{");
+                                stringBuilder.AppendLine("    -MODULE[ModuleCargoPart] {}");
+                            }
+                            else
+                            {
+                                stringBuilder.AppendLine("@PART[" + adjName + "]:HAS[!MODULE[ModuleCargoPart]]:Final");
+                                stringBuilder.AppendLine("{");
+                            }
                             stringBuilder.AppendLine("    MODULE");
                             stringBuilder.AppendLine("    {");
                             stringBuilder.AppendLine("        name = ModuleCargoPart");
                             stringBuilder.AppendLine("        packedVolume = " + adjVol.ToString("F0"));
+                            stringBuilder.AppendLine("        KSP_PartVolume = true");
                             stringBuilder.AppendLine("    }");
                             stringBuilder.AppendLine("}");
 
@@ -274,7 +329,7 @@ namespace KSP_PartVolume
                                     stringBuilder.AppendLine("//      is tank");
                                 if (sizeTooBig)
                                     stringBuilder.AppendLine("//      size exceeds largestAllowablePart: " + Settings.largestAllowablePart);
-                                if (contains_ModuleCargoPart)
+                                if (contains_ModuleCargoPart && !Settings.processManipulableOnly)
                                     stringBuilder.AppendLine("//      contains ModuleCargoPart");
                                 if (isStock)
                                     stringBuilder.AppendLine("//      is Stock");
@@ -317,6 +372,8 @@ namespace KSP_PartVolume
             //if (numCargoPartsAdded > 0)
             //    ShowWarning(numCargoPartsAdded);
         }
+
+
 
         bool CheckForKIFA()
         {

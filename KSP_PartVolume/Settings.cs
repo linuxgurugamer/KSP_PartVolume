@@ -15,6 +15,7 @@ namespace KSP_PartVolume
         public static float largestAllowablePart = 64000f;
         public static bool manned = false;
         public static bool doStock = false;
+        public static bool processManipulableOnly = false;
 
         public static float oFiller = filler;
         public static float oScienceFiller = scienceFiller;
@@ -25,6 +26,7 @@ namespace KSP_PartVolume
         public static float oLargestAllowablePart = largestAllowablePart;
         public static bool oManned = manned;
         public static bool oDoStock = doStock;
+        public static bool oProcessManipulableOnly = processManipulableOnly;
 
         static internal void ResetToDefaults()
         {
@@ -37,6 +39,7 @@ namespace KSP_PartVolume
             largestAllowablePart = 64000f;
             manned = false;
             doStock = false;
+            processManipulableOnly = false;
         }
         static internal void RememberSettings()
         {
@@ -49,6 +52,7 @@ namespace KSP_PartVolume
             oLargestAllowablePart = largestAllowablePart;
             oManned = manned;
             oDoStock = doStock;
+            oProcessManipulableOnly = processManipulableOnly;
         }
         static internal void LoadConfig()
         {
@@ -67,6 +71,7 @@ namespace KSP_PartVolume
             largestAllowablePart = node.SafeLoad("largestAllowablePart", largestAllowablePart);
             manned = node.SafeLoad("manned", manned);
             doStock = node.SafeLoad("doStock", doStock);
+            processManipulableOnly = node.SafeLoad("processManipulableOnly", processManipulableOnly);
         }
 
         static internal void SaveConfig()
@@ -82,6 +87,7 @@ namespace KSP_PartVolume
             configNode2.AddValue("largestAllowablePart", largestAllowablePart.ToString("F0"));
             configNode2.AddValue("manned", manned);
             configNode2.AddValue("doStock", doStock);
+            configNode2.AddValue("processManipulableOnly", processManipulableOnly);
 
             configNode1.AddNode(configNode2);
             configNode1.Save(PartVolume.CFG_FILE);
@@ -94,7 +100,8 @@ namespace KSP_PartVolume
                 oLimitSize != limitSize ||
                 oLargestAllowablePart != largestAllowablePart ||
                 oManned != manned ||
-                oDoStock != doStock)
+                oDoStock != doStock ||
+                oProcessManipulableOnly != processManipulableOnly)
             {
                 File.Delete(PartVolume.VOL_CFG_FILE);
                 PartVolume.Instance.ShowWarning();
