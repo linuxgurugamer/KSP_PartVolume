@@ -92,7 +92,7 @@ namespace KSP_PartVolume
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Largest Allowable Part: ");
-                var s = GUILayout.TextField(Settings.largestAllowablePart.ToString("F0"), GUILayout.Width(50));
+                var s = GUILayout.TextField(Settings.largestAllowablePart.ToString("F0"), GUILayout.Width(75));
                 GUILayout.Label(" liters");
                 if (float.TryParse(s, out float f))
                 {
