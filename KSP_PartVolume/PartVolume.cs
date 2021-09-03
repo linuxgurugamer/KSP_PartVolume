@@ -218,19 +218,22 @@ namespace KSP_PartVolume
 
                         var adjVol = AdjustedVolume(current, vol, isEnginePart, isRcsPart, out float adj);
 
+                        int stackableQuantity = Math.Min((int)Settings.maxCommonStackVolume / (int)adjVol, Settings.maxPartsInStack);
+
                         bool isManipulableOnly = false;
                         bool isKSP_PartVolumeModule = false;
+                        string currentCargoPartPackedVolume = "";
 
                         if (currentCargoPart != null)
                         {
                             Log.Info("currentCargoPart: " + current.name);
                             if (currentCargoPart.HasValue("packedVolume"))
                             {
-                                string s = currentCargoPart.GetValue("packedVolume");
+                                currentCargoPartPackedVolume = currentCargoPart.GetValue("packedVolume");
                                 currentCargoPart.SetValue("packedVolume", adjVol.ToString("F0"));
-                                Log.Info("currentCargoPart: packedVolume: " + s + ", newPackedVolume: " + adjVol);
+                                Log.Info("currentCargoPart: packedVolume: " + currentCargoPartPackedVolume + ", newPackedVolume: " + adjVol);
 
-                                var v = float.Parse(s);
+                                var v = float.Parse(currentCargoPartPackedVolume);
                                 if (v <= 0)
                                     isManipulableOnly = true;
 
@@ -268,17 +271,25 @@ namespace KSP_PartVolume
                             {
                                 stringBuilder.AppendLine("@PART[" + adjName + "]:Final");
                                 stringBuilder.AppendLine("{");
-                                stringBuilder.AppendLine("    -MODULE[ModuleCargoPart] {}");
+                                stringBuilder.AppendLine("    @MODULE[ModuleCargoPart]");
+                                stringBuilder.AppendLine("    {");
+                                stringBuilder.AppendLine("        %packedVolume = " + adjVol.ToString("F0"));
                             }
                             else
                             {
                                 stringBuilder.AppendLine("@PART[" + adjName + "]:HAS[!MODULE[ModuleCargoPart]]:Final");
                                 stringBuilder.AppendLine("{");
+                                stringBuilder.AppendLine("    MODULE");
+                                stringBuilder.AppendLine("    {");
+                                stringBuilder.AppendLine("        name = ModuleCargoPart");
+                                stringBuilder.AppendLine("        packedVolume = " + adjVol.ToString("F0"));
                             }
-                            stringBuilder.AppendLine("    MODULE");
-                            stringBuilder.AppendLine("    {");
-                            stringBuilder.AppendLine("        name = ModuleCargoPart");
-                            stringBuilder.AppendLine("        packedVolume = " + adjVol.ToString("F0"));
+
+                            if (stackableQuantity > 1)
+                            {
+                                stringBuilder.AppendLine("        %stackableQuantity = " + stackableQuantity);
+                            }
+
                             stringBuilder.AppendLine("        KSP_PartVolume = true");
                             stringBuilder.AppendLine("    }");
                             stringBuilder.AppendLine("}");
@@ -294,6 +305,9 @@ namespace KSP_PartVolume
                                     var mcp = m as ModuleCargoPart;
                                     mcp.part = part;
                                     mcp.packedVolume = adjVol;
+
+                                    if (stackableQuantity > 1)
+                                        mcp.stackableQuantity = stackableQuantity;
 
                                     for (int i = current.moduleInfos.Count - 1; i >= 0; --i)
                                     {
@@ -329,10 +343,13 @@ namespace KSP_PartVolume
                                     stringBuilder.AppendLine("//      is tank");
                                 if (sizeTooBig)
                                     stringBuilder.AppendLine("//      size exceeds largestAllowablePart: " + Settings.largestAllowablePart);
-                                if (contains_ModuleCargoPart && !Settings.processManipulableOnly)
-                                    stringBuilder.AppendLine("//      contains ModuleCargoPart");
                                 if (isStock)
                                     stringBuilder.AppendLine("//      is Stock");
+                                if (contains_ModuleCargoPart && !Settings.processManipulableOnly
+                                    || contains_ModuleCargoPart && !isManipulableOnly
+                                    )
+                                    stringBuilder.AppendLine("//      contains ModuleCargoPart (" + currentCargoPartPackedVolume + ")");
+
                                 stringBuilder.AppendLine("//");
 
                                 adjVol = -999;

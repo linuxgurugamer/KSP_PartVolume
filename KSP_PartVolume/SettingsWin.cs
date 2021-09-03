@@ -63,6 +63,7 @@ namespace KSP_PartVolume
             Settings.doStock = GUILayout.Toggle(Settings.doStock, "Include stock parts");
             Settings.processManipulableOnly = GUILayout.Toggle(Settings.processManipulableOnly, "Process manipulable-only parts");
             Settings.limitSize = GUILayout.Toggle(Settings.limitSize, "Limit Size");
+            Settings.stackParts = GUILayout.Toggle(Settings.stackParts, "Stack Parts");
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Filler (" + (Settings.filler * 100).ToString("F0") + "%):");
@@ -99,6 +100,33 @@ namespace KSP_PartVolume
                 }
                 GUILayout.EndHorizontal();
             }
+
+            if (Settings.stackParts)
+            {
+                {
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("Max Common Stack Volume: ");
+                    var s = GUILayout.TextField(Settings.maxCommonStackVolume.ToString("F0"), GUILayout.Width(50));
+                    GUILayout.Label(" liters");
+                    if (float.TryParse(s, out float f))
+                    {
+                        Settings.maxCommonStackVolume = f;
+                    }
+                    GUILayout.EndHorizontal();
+                }
+                {
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("Max Parts In Stack: ");
+                    var s = GUILayout.TextField(Settings.maxPartsInStack.ToString(), GUILayout.Width(50));
+                    GUILayout.Label("");
+                    if (int.TryParse(s, out int i))
+                    {
+                        Settings.maxPartsInStack = i;
+                    }
+                    GUILayout.EndHorizontal();
+                }
+            }
+
             GUILayout.Space(20);
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();

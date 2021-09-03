@@ -16,6 +16,9 @@ namespace KSP_PartVolume
         public static bool manned = false;
         public static bool doStock = false;
         public static bool processManipulableOnly = false;
+        public static bool stackParts = false;
+        public static int maxPartsInStack = 4;
+        public static float maxCommonStackVolume = 60f;
 
         public static float oFiller = filler;
         public static float oScienceFiller = scienceFiller;
@@ -27,6 +30,9 @@ namespace KSP_PartVolume
         public static bool oManned = manned;
         public static bool oDoStock = doStock;
         public static bool oProcessManipulableOnly = processManipulableOnly;
+        public static bool oStackParts = stackParts;
+        public static int oMaxPartsInStack = maxPartsInStack;
+        public static float oMaxStackCommonVolume = maxCommonStackVolume;
 
         static internal void ResetToDefaults()
         {
@@ -40,7 +46,10 @@ namespace KSP_PartVolume
             manned = false;
             doStock = false;
             processManipulableOnly = false;
-        }
+            stackParts = false;
+            maxPartsInStack = 4;
+            maxCommonStackVolume = 60f;
+    }
         static internal void RememberSettings()
         {
             oFiller = filler;
@@ -53,6 +62,9 @@ namespace KSP_PartVolume
             oManned = manned;
             oDoStock = doStock;
             oProcessManipulableOnly = processManipulableOnly;
+            oStackParts = stackParts;
+            oMaxPartsInStack = maxPartsInStack;
+            oMaxStackCommonVolume = maxCommonStackVolume;
         }
         static internal void LoadConfig()
         {
@@ -72,6 +84,9 @@ namespace KSP_PartVolume
             manned = node.SafeLoad("manned", manned);
             doStock = node.SafeLoad("doStock", doStock);
             processManipulableOnly = node.SafeLoad("processManipulableOnly", processManipulableOnly);
+            stackParts = node.SafeLoad("stackParts", stackParts);
+            maxPartsInStack = node.SafeLoad("maxPartsInStack", maxPartsInStack);
+            maxCommonStackVolume = node.SafeLoad("maxStackCommonVolume", maxCommonStackVolume);
         }
 
         static internal void SaveConfig()
@@ -88,6 +103,9 @@ namespace KSP_PartVolume
             configNode2.AddValue("manned", manned);
             configNode2.AddValue("doStock", doStock);
             configNode2.AddValue("processManipulableOnly", processManipulableOnly);
+            configNode2.AddValue("stackParts", stackParts);
+            configNode2.AddValue("maxPartsInStack", maxPartsInStack);
+            configNode2.AddValue("maxStackCommonVolume", maxCommonStackVolume);
 
             configNode1.AddNode(configNode2);
             configNode1.Save(PartVolume.CFG_FILE);
@@ -101,7 +119,11 @@ namespace KSP_PartVolume
                 oLargestAllowablePart != largestAllowablePart ||
                 oManned != manned ||
                 oDoStock != doStock ||
-                oProcessManipulableOnly != processManipulableOnly)
+                oProcessManipulableOnly != processManipulableOnly ||
+                oStackParts != stackParts ||
+                oMaxPartsInStack != maxPartsInStack ||
+                oMaxStackCommonVolume != maxCommonStackVolume
+                )
             {
                 File.Delete(PartVolume.VOL_CFG_FILE);
                 PartVolume.Instance.ShowWarning();
