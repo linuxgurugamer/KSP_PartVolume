@@ -285,7 +285,7 @@ namespace KSP_PartVolume
                                 stringBuilder.AppendLine("        packedVolume = " + adjVol.ToString("F0"));
                             }
 
-                            if (stackableQuantity > 1)
+                            if (Settings.stackParts && stackableQuantity > 1)
                             {
                                 stringBuilder.AppendLine("        %stackableQuantity = " + stackableQuantity);
                             }
