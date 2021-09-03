@@ -269,7 +269,7 @@ namespace KSP_PartVolume
                             string adjName = partName.Replace(' ', '?').Replace('(', '?').Replace(')', '?');
                             if (contains_ModuleCargoPart)
                             {
-                                stringBuilder.AppendLine("@PART[" + adjName + "]:Final");
+                                stringBuilder.AppendLine("@PART[" + adjName + "]:HAS[MODULE[ModuleCargoPart]]:Final");
                                 stringBuilder.AppendLine("{");
                                 stringBuilder.AppendLine("    @MODULE[ModuleCargoPart]");
                                 stringBuilder.AppendLine("    {");
@@ -290,9 +290,11 @@ namespace KSP_PartVolume
                                 stringBuilder.AppendLine("        %stackableQuantity = " + stackableQuantity);
                             }
 
-                            stringBuilder.AppendLine("        KSP_PartVolume = true");
-                            stringBuilder.AppendLine("    }");
-                            stringBuilder.AppendLine("}");
+                            {
+                                stringBuilder.AppendLine("        %KSP_PartVolume = true");
+                                stringBuilder.AppendLine("    }");
+                                stringBuilder.AppendLine("}");
+                            }
 
                             RestartWindowVisible = true;
 
@@ -348,7 +350,7 @@ namespace KSP_PartVolume
                                 if (contains_ModuleCargoPart && !Settings.processManipulableOnly
                                     || contains_ModuleCargoPart && !isManipulableOnly
                                     )
-                                    stringBuilder.AppendLine("//      contains ModuleCargoPart (" + currentCargoPartPackedVolume + ")");
+                                    stringBuilder.AppendLine("//      contains ModuleCargoPart (packedVolume = " + currentCargoPartPackedVolume + ")");
 
                                 stringBuilder.AppendLine("//");
 
