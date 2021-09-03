@@ -6,6 +6,8 @@ namespace KSP_PartVolume
 {
     class Settings
     {
+
+        public static bool enableFillers = true;
         public static float filler = 0.1f;
         public static float scienceFiller = 0.25f;
         public static float engineFiller = 0.15f;
@@ -20,6 +22,7 @@ namespace KSP_PartVolume
         public static int maxPartsInStack = 4;
         public static float maxCommonStackVolume = 60f;
 
+        public static bool oEnableFillers = enableFillers;
         public static float oFiller = filler;
         public static float oScienceFiller = scienceFiller;
         public static float oEngineFiller = engineFiller;
@@ -36,6 +39,7 @@ namespace KSP_PartVolume
 
         static internal void ResetToDefaults()
         {
+            enableFillers = true;
             filler = 0.1f;
             scienceFiller = 0.25f;
             engineFiller = 0.15f;
@@ -52,6 +56,7 @@ namespace KSP_PartVolume
     }
         static internal void RememberSettings()
         {
+            oEnableFillers = enableFillers;
             oFiller = filler;
             oEngineFiller = engineFiller;
             oRcsFiller = rcsFiller;
@@ -74,6 +79,9 @@ namespace KSP_PartVolume
             ConfigNode node = configNode.GetNode("PARTVOLUME");
             if (node == null)
                 return;
+
+
+            enableFillers = node.SafeLoad("enableFillers", enableFillers);
             filler = node.SafeLoad("filler", filler);
             scienceFiller = node.SafeLoad("scienceFiller", scienceFiller);
             engineFiller = node.SafeLoad("engineFiller", engineFiller);
@@ -93,6 +101,7 @@ namespace KSP_PartVolume
         {
             ConfigNode configNode1 = new ConfigNode();
             ConfigNode configNode2 = new ConfigNode("PARTVOLUME");
+            configNode2.AddValue("enableFillers", enableFillers);
             configNode2.AddValue("filler", filler);
             configNode2.AddValue("scienceFiller", scienceFiller.ToString("F2"));
             configNode2.AddValue("engineFiller", engineFiller.ToString("F2"));
@@ -110,7 +119,8 @@ namespace KSP_PartVolume
             configNode1.AddNode(configNode2);
             configNode1.Save(PartVolume.CFG_FILE);
 
-            if (oEngineFiller != engineFiller ||
+            if (oEnableFillers != enableFillers ||
+                oEngineFiller != engineFiller ||
                 oFiller != filler ||
                 oRcsFiller != rcsFiller ||
                 oScienceFiller != scienceFiller ||
