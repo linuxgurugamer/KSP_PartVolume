@@ -6,7 +6,8 @@ using System.Text;
 using UnityEngine;
 using KSP_Log;
 using KSP.Localization;
-
+using System.Text.RegularExpressions;
+using System.Linq;
 
 namespace KSP_PartVolume
 {
@@ -47,6 +48,8 @@ namespace KSP_PartVolume
         List<string> resourceBlackList;
         List<String> partBlacklist;
         List<String> partWhitelist;
+        string blacklistRegexPattern = "";
+        //string WhitelistRegexPattern = "";
 
         private void Awake()
         {
@@ -72,6 +75,9 @@ namespace KSP_PartVolume
                 var v = n.GetValues("blacklistPart");
                 foreach (var v1 in v)
                     partBlacklist.Add(v1);
+
+                var patterns = n.GetValues("blacklistRegexPattern");
+                blacklistRegexPattern = String.Join("|", patterns.Select(x => "(" + x + ")"));
             }
             foreach (var p in partBlacklist)
                 Log.Info("Part blacklisted: " + p);
@@ -83,6 +89,9 @@ namespace KSP_PartVolume
                 var v = n.GetValues("whitelistPart");
                 foreach (var v1 in v)
                     partWhitelist.Add(v1);
+
+                //var patterns = n.GetValues("whitelistRegexPattern");
+                //WhitelistRegexPattern = String.Join("|", patterns.Select(x => "(" + x + ")"));
             }
             foreach (var p in partWhitelist)
                 Log.Info("Part whitelisted: " + p);
@@ -114,7 +123,9 @@ namespace KSP_PartVolume
                     // Don't do the flag or any kerbalEVA
                     //
 
+
                     if (!partBlacklist.Contains(current.name) &&
+                        !Regex.IsMatch(current.name, blacklistRegexPattern) &&
                         (current.name.Length < 9 || current.name.Substring(0, 9) != "kerbalEVA"))
                     {
                         bool contains_ModuleCargoPart = false;
@@ -408,18 +419,23 @@ namespace KSP_PartVolume
 
         private float AdjustedVolume(AvailablePart availPart, float vol, bool isEngine, bool isRcs, out float adj)
         {
-            float num = Settings.filler;
-            if (availPart.category == PartCategories.Science)
-                num = Math.Max(num, Settings.scienceFiller);
-            if (isEngine)
-                num = Math.Max(num, Settings.engineFiller);
-            if (isRcs)
-                num = Math.Max(num, Settings.rcsFiller);
-            adj = num;
-            return (float)Math.Floor(vol * (1.0 + num) + 1.0);
+            if (Settings.enableFillers)
+            {
+                float num = Settings.filler;
+                if (availPart.category == PartCategories.Science)
+                    num = Math.Max(num, Settings.scienceFiller);
+                if (isEngine)
+                    num = Math.Max(num, Settings.engineFiller);
+                if (isRcs)
+                    num = Math.Max(num, Settings.rcsFiller);
+                adj = num;
+                return (float)Math.Floor(vol * (1.0 + num) + 1.0);
+            }
+            else
+            {
+                adj = 0;
+                return vol;
+            }
         }
-
-
-
     }
 }
