@@ -291,7 +291,7 @@ namespace KSP_PartVolume
                         string adjName = partName.Replace(' ', '?').Replace('(', '?').Replace(')', '?');
                         if (contains_ModuleCargoPart)
                         {
-                            stringBuilder.AppendLine("@PART[" + adjName + "]:HAS[MODULE[ModuleCargoPart]]:Final");
+                            stringBuilder.AppendLine("@PART[" + adjName + "]:HAS[@MODULE[ModuleCargoPart]]:Final");
                             stringBuilder.AppendLine("{");
                             stringBuilder.AppendLine("    @MODULE[ModuleCargoPart]");
                             stringBuilder.AppendLine("    {");
