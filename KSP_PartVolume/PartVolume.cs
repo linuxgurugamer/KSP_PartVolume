@@ -6,7 +6,8 @@ using System.Text;
 using UnityEngine;
 using KSP_Log;
 using KSP.Localization;
-
+using System.Text.RegularExpressions;
+using System.Linq;
 
 namespace KSP_PartVolume
 {
@@ -47,6 +48,8 @@ namespace KSP_PartVolume
         List<string> resourceBlackList;
         List<String> partBlacklist;
         List<String> partWhitelist;
+        string blacklistRegexPattern = "";
+        //string WhitelistRegexPattern = "";
 
         private void Awake()
         {
@@ -72,6 +75,9 @@ namespace KSP_PartVolume
                 var v = n.GetValues("blacklistPart");
                 foreach (var v1 in v)
                     partBlacklist.Add(v1);
+
+                var patterns = n.GetValues("blacklistRegexPattern");
+                blacklistRegexPattern = String.Join("|", patterns.Select(x => "(" + x + ")"));
             }
             foreach (var p in partBlacklist)
                 Log.Info("Part blacklisted: " + p);
@@ -83,6 +89,9 @@ namespace KSP_PartVolume
                 var v = n.GetValues("whitelistPart");
                 foreach (var v1 in v)
                     partWhitelist.Add(v1);
+
+                //var patterns = n.GetValues("whitelistRegexPattern");
+                //WhitelistRegexPattern = String.Join("|", patterns.Select(x => "(" + x + ")"));
             }
             foreach (var p in partWhitelist)
                 Log.Info("Part whitelisted: " + p);
@@ -110,100 +119,107 @@ namespace KSP_PartVolume
                 {
                     AvailablePart current = partEnumerator.Current;
 
+                    string[] urlParts = current.partUrl.Split('/');
+                    string urlName = urlParts[urlParts.Length - 1];
+
                     //
-                    // Don't do the flag or any kerbalEVA
+                    // urlName more precisely correspond to part name in the config than current.name,
+                    // but KerbalEVA and flag have empty urlname and need to be filtered, so: 
                     //
 
-                    if (!partBlacklist.Contains(current.name) &&
-                        (current.name.Length < 9 || current.name.Substring(0, 9) != "kerbalEVA"))
+                    string partName = urlParts[urlParts.Length - 1];
+                    if (partName == "") partName = current.name;
+
+                    if (partBlacklist.Contains(partName) ||
+                        Regex.IsMatch(partName, blacklistRegexPattern))
                     {
-                        bool contains_ModuleCargoPart = false;
-                        bool contains_ModuleInventoryPart = false;
-                        bool contains_KSPPartVolumeModule = false;
+                        Log.Info(String.Format("partName: {0, -40} found in the blacklist and ignored.", partName + ","));
+                        continue;
+                    }
 
-                        bool containsCrew = false;
-                        bool isTank = false;
-                        bool isTankNotIgnoreable = false;
-                        bool sizeTooBig = false;
-                        bool isStock = false;
+                    bool contains_ModuleCargoPart = false;
+                    bool contains_ModuleInventoryPart = false;
+                    bool contains_KSPPartVolumeModule = false;
 
-                        bool isRcsPart = false;
-                        bool isEnginePart = false;
-                        ConfigNode currentCargoPart = null;
+                    bool containsCrew = false;
+                    bool isTank = false;
+                    bool sizeTooBig = false;
+                    bool isStock = false;
 
-                        string[] urlParts = current.partUrl.Split('/');
+                    bool isRcsPart = false;
+                    bool isEnginePart = false;
+                    ConfigNode currentCargoPart = null;
 
-                        if (!Settings.doStock)
+
+
+                    if (!Settings.doStock)
+                    {
+                        if (urlParts[0] == "Squad" || urlParts[0] == "SquadExpansion")
+                            if (!partWhitelist.Contains(partName))
+                                isStock = true;
+                    }
+                    var moduleNodes = current.partConfig.GetNodes("MODULE");
+                    for (int i = 0; i < moduleNodes.Length; i++)
+                    {
+                        var name = moduleNodes[i].GetValue("name");
+
+                        if (name == "ModuleCargoPart")
                         {
-                            if (urlParts[0] == "Squad" || urlParts[0] == "SquadExpansion")
-                                if (!partWhitelist.Contains(urlParts[urlParts.Length - 1]))
-                                    isStock = true;
+                            contains_ModuleCargoPart = true;
+                            currentCargoPart = moduleNodes[i];
                         }
-                        var moduleNodes = current.partConfig.GetNodes("MODULE");
-                        for (int i = 0; i < moduleNodes.Length; i++)
+                        if (name == "ModuleInventoryPart")
+                            contains_ModuleInventoryPart = true;
+                        if (name == "KSPPartVolumeModule") contains_KSPPartVolumeModule = true;
+                        if (name == "ModuleRCS" || name == "ModuleRCSFX") isRcsPart = true;
+                        if (name == "ModuleEngines" || name == "ModuleEnginesFX") isEnginePart = true;
+
+                        //  Check for manned
+                        if (!Settings.manned)
                         {
-                            var name = moduleNodes[i].GetValue("name");
-
-                            if (name == "ModuleCargoPart")
+                            int CrewCapacity = 0;
+                            if (current.partConfig.TryGetValue("CrewCapacity", ref CrewCapacity))
                             {
-                                contains_ModuleCargoPart = true;
-                                currentCargoPart = moduleNodes[i];
-                            }
-                            if (name == "ModuleInventoryPart")
-                                contains_ModuleInventoryPart = true;
-                            if (name == "KSPPartVolumeModule") contains_KSPPartVolumeModule = true;
-                            if (name == "ModuleRCS" || name == "ModuleRCSFX") isRcsPart = true;
-                            if (name == "ModuleEngines" || name == "ModuleEnginesFX") isEnginePart = true;
-
-                            //  Check for manned
-                            if (!Settings.manned)
-                            {
-                                int CrewCapacity = 0;
-                                if (current.partConfig.TryGetValue("CrewCapacity", ref CrewCapacity))
-                                {
-                                    if (CrewCapacity > 0)
-                                        containsCrew = true;
-                                }
-                            }
-                        }
-                        if (contains_KSPPartVolumeModule)
-                            contains_ModuleCargoPart = false;
-                        var resNodes = current.partConfig.GetNodes("RESOURCE");
-                        float mass = 0;
-                        current.partConfig.TryGetValue("mass", ref mass);
-                        float totalResMass = 0;
-
-                        //if (!Settings.doTanks)
-                        {
-                            foreach (var resNode in resNodes)
-                            {
-                                var name = resNode.GetValue("name");
-
-                                if (resourceBlackList.Contains(name))
-                                    continue;
-
-                                float maxAmount = 0;
-                                resNode.TryGetValue("maxAmount", ref maxAmount);
-                                var definition = PartResourceLibrary.Instance.GetDefinition(name);
-                                if (definition != null)
-                                {
-                                    var density = definition.density;
-                                    float resMass = maxAmount * density;
-                                    totalResMass += resMass;
-                                }
-                            }
-
-                            if (totalResMass > mass)
-                            {
-                                isTankNotIgnoreable = true;
-                                    isTank = !Settings.doTanks;
+                                if (CrewCapacity > 0)
+                                    containsCrew = true;
                             }
                         }
-                        stringBuilder = new StringBuilder();
+                    }
+                    if (contains_KSPPartVolumeModule)
+                        contains_ModuleCargoPart = false;
+                    var resNodes = current.partConfig.GetNodes("RESOURCE");
+                    float mass = 0;
+                    current.partConfig.TryGetValue("mass", ref mass);
+                    float totalResMass = 0;
 
-                        Bounds bounds = default(Bounds);
-                        foreach (Bounds rendererBound in PartGeometryUtil.GetRendererBounds((Part)current.partPrefab))
-                            bounds.Encapsulate(rendererBound);
+                    if (!Settings.doTanks)
+                    {
+                        foreach (var resNode in resNodes)
+                        {
+                            var name = resNode.GetValue("name");
+
+                            if (resourceBlackList.Contains(name))
+                                continue;
+
+                            float maxAmount = 0;
+                            resNode.TryGetValue("maxAmount", ref maxAmount);
+                            var definition = PartResourceLibrary.Instance.GetDefinition(name);
+                            if (definition != null)
+                            {
+                                var density = definition.density;
+                                float resMass = maxAmount * density;
+                                totalResMass += resMass;
+                            }
+                        }
+
+                        if (totalResMass > mass)
+                            isTank = true;
+                    }
+                    stringBuilder = new StringBuilder();
+
+                    Bounds bounds = default(Bounds);
+                    foreach (Bounds rendererBound in PartGeometryUtil.GetRendererBounds((Part)current.partPrefab))
+                        bounds.Encapsulate(rendererBound);
 
 #if false
                         Bounds colliderBounds = default(Bounds);
@@ -215,164 +231,170 @@ namespace KSP_PartVolume
                         allBounds = PartGeometryUtil.MergeBounds(a, current.iconPrefab.transform.root);
 #endif
 
-                        float vol = (float)(bounds.size.x * bounds.size.y * bounds.size.z) * 1000f;
+                    float vol = (float)(bounds.size.x * bounds.size.y * bounds.size.z) * 1000f;
 
-                        if (vol > Settings.largestAllowablePart && Settings.limitSize)
-                            sizeTooBig = true;
+                    if (vol > Settings.largestAllowablePart && Settings.limitSize)
+                        sizeTooBig = true;
 
-                        var maxLen = Math.Max(bounds.size.x, Math.Max(bounds.size.y, bounds.size.z));
-                        var minLen = Math.Min(bounds.size.x, Math.Min(bounds.size.y, bounds.size.z));
-                        var tankVol = Math.Pow(minLen *0.5, 2) * maxLen * Math.PI * 1000;
+                    var adjVol = AdjustedVolume(current, vol, isEnginePart, isRcsPart, out float adj);
 
-                        var adjVol = AdjustedVolume(current, vol, isEnginePart, isRcsPart, out float adj);
+                    int stackableQuantity = Math.Min((int)Settings.maxCommonStackVolume / (int)adjVol, Settings.maxPartsInStack);
 
-                        bool isManipulableOnly = false;
-                        bool isKSP_PartVolumeModule = false;
+                    bool isManipulableOnly = false;
+                    bool isKSP_PartVolumeModule = false;
+                    string currentCargoPartPackedVolume = "";
 
-                        if (currentCargoPart != null)
+                    if (currentCargoPart != null)
+                    {
+                        if (currentCargoPart.HasValue("packedVolume"))
                         {
-                            Log.Info("currentCargoPart: " + current.name);
-                            if (currentCargoPart.HasValue("packedVolume"))
-                            {
-                                string s = currentCargoPart.GetValue("packedVolume");
-                                currentCargoPart.SetValue("packedVolume", adjVol.ToString("F0"));
-                                Log.Info("currentCargoPart: packedVolume: " + s + ", newPackedVolume: " + adjVol);
+                            currentCargoPartPackedVolume = currentCargoPart.GetValue("packedVolume");
+                            currentCargoPart.SetValue("packedVolume", adjVol.ToString("F0"));
 
-                                var v = float.Parse(s);
-                                if (v <= 0)
-                                    isManipulableOnly = true;
+                            Log.Info(String.Format("partName: {0, -40} packedVolume: {1,7}, calcPackedVolume: {2,7:F0}", 
+                                partName + ",", currentCargoPartPackedVolume, adjVol));
 
-                                isKSP_PartVolumeModule = currentCargoPart.HasValue("KSP_PartVolume");
-                            }
-                            else
-                                Log.Error("packedVolume not found");
+                            var v = float.Parse(currentCargoPartPackedVolume);
+                            if (v <= 0)
+                                isManipulableOnly = true;
+
+                            isKSP_PartVolumeModule = currentCargoPart.HasValue("KSP_PartVolume");
                         }
-                        if (contains_ModuleInventoryPart)
-                            adjVol = -1;
-
-                        StringBuilder tmp = new StringBuilder();
-                        tmp.AppendLine("// " + current.partUrl);
-
-                        tmp.AppendLine("// Dimensions: x: " + bounds.size.x.ToString("F2") + ", y: " + bounds.size.y.ToString("F2") + ", z: " + bounds.size.z.ToString("F2"));
-
-                        tmp.AppendLine(string.Format("// Bounding Box Size: {0} liters", vol));
-                        tmp.AppendLine("// Volume adjustment: " + (adj * 100).ToString("F0") + "%");
-                        if (isRcsPart)
-                            tmp.AppendLine("// RCS module detected");
-                        if (isEnginePart)
-                            tmp.AppendLine("// Engine module detected");
-                        Part part = UnityEngine.Object.Instantiate(current.partPrefab);
-                        part.gameObject.SetActive(value: false);
-
-                        if (isTankNotIgnoreable)
+                        else
                         {
-                            var volume = DetermineVolume(part) * 1000;
-                            stringBuilder.AppendLine("//      Calculated tank volume: " + volume.ToString("F1"));
-                            stringBuilder.AppendLine("//      Calculated tankVol (max x min) volume: " + tankVol.ToString("F1"));
-                            
+                            Log.Error(String.Format("partName: {0, -40} packedVolume not found", partName + "," ));
                         }
+                    }
+                    if (contains_ModuleInventoryPart)
+                        adjVol = -1;
 
-                        tmp.AppendLine("//");
+                    StringBuilder tmp = new StringBuilder();
+                    tmp.AppendLine("// " + current.partUrl);
 
+                    tmp.AppendLine("// Dimensions: x: " + bounds.size.x.ToString("F2") + ", y: " + bounds.size.y.ToString("F2") + ", z: " + bounds.size.z.ToString("F2"));
 
-                        if (!containsCrew && !isTank && !sizeTooBig && !isStock &&
-                            (!contains_ModuleCargoPart ||
-                             (contains_ModuleCargoPart && Settings.processManipulableOnly && isManipulableOnly) ||
-                           (!isKSP_PartVolumeModule && partWhitelist.Contains(urlParts[urlParts.Length - 1]))
-                            ))
+                    tmp.AppendLine(string.Format("// Bounding Box Size: {0} liters", vol));
+                    tmp.AppendLine("// Volume adjustment: " + (adj * 100).ToString("F0") + "%");
+                    if (isRcsPart)
+                        tmp.AppendLine("// RCS module detected");
+                    if (isEnginePart)
+                        tmp.AppendLine("// Engine module detected");
+                    tmp.AppendLine("//");
+
+                    if (!containsCrew && !isTank && !sizeTooBig && !isStock &&
+                        (!contains_ModuleCargoPart ||
+                         (contains_ModuleCargoPart && Settings.processManipulableOnly && isManipulableOnly) ||
+                       (!isKSP_PartVolumeModule && partWhitelist.Contains(partName))
+                        ))
+                    {
+                        stringBuilder.Append(tmp);
+                        string adjName = partName.Replace(' ', '?').Replace('(', '?').Replace(')', '?');
+                        if (contains_ModuleCargoPart)
                         {
-                            stringBuilder.Append(tmp);
-                            string partName = urlParts[urlParts.Length - 1];
-                            string adjName = partName.Replace(' ', '?').Replace('(', '?').Replace(')', '?');
-                            if (contains_ModuleCargoPart)
-                            {
-                                stringBuilder.AppendLine("@PART[" + adjName + "]:Final");
-                                stringBuilder.AppendLine("{");
-                                stringBuilder.AppendLine("    -MODULE[ModuleCargoPart] {}");
-                            }
-                            else
-                            {
-                                stringBuilder.AppendLine("@PART[" + adjName + "]:HAS[!MODULE[ModuleCargoPart]]:Final");
-                                stringBuilder.AppendLine("{");
-                            }
+                            stringBuilder.AppendLine("@PART[" + adjName + "]:HAS[@MODULE[ModuleCargoPart]]:Final");
+                            stringBuilder.AppendLine("{");
+                            stringBuilder.AppendLine("    @MODULE[ModuleCargoPart]");
+                            stringBuilder.AppendLine("    {");
+                            stringBuilder.AppendLine("        %packedVolume = " + adjVol.ToString("F0"));
+                        }
+                        else
+                        {
+                            stringBuilder.AppendLine("@PART[" + adjName + "]:HAS[!MODULE[ModuleCargoPart]]:Final");
+                            stringBuilder.AppendLine("{");
                             stringBuilder.AppendLine("    MODULE");
                             stringBuilder.AppendLine("    {");
                             stringBuilder.AppendLine("        name = ModuleCargoPart");
                             stringBuilder.AppendLine("        packedVolume = " + adjVol.ToString("F0"));
-                            stringBuilder.AppendLine("        KSP_PartVolume = true");
+                        }
+
+                        if (Settings.stackParts && stackableQuantity > 1)
+                        {
+                            stringBuilder.AppendLine("        %stackableQuantity = " + stackableQuantity);
+                        }
+
+                        {
+                            stringBuilder.AppendLine("        %KSP_PartVolume = true");
                             stringBuilder.AppendLine("    }");
                             stringBuilder.AppendLine("}");
-
-                            RestartWindowVisible = true;
-
-                            foreach (PartModule m in part.Modules)
-                            {
-                                if (m.moduleName == "ModuleCargoPart")
-                                {
-                                    var mcp = m as ModuleCargoPart;
-                                    mcp.part = part;
-                                    mcp.packedVolume = adjVol;
-
-                                    for (int i = current.moduleInfos.Count - 1; i >= 0; --i)
-                                    {
-                                        AvailablePart.ModuleInfo info = current.moduleInfos[i];
-                                        if (info.moduleName == Localizer.Format("#autoLOC_8002221")) // Cargo Part
-                                        {
-                                            try
-                                            {
-                                                info.info = mcp.GetInfo();
-                                            }
-                                            catch (Exception ex)
-                                            {
-                                                Log.Error("PartInfo.Start, Part: " + current.partUrl + ", Exception caught in ModuleCargoPart.GetInfo, exception: " + ex.Message + "\n" + ex.StackTrace);
-                                                info.info = "KSP_PartVolume error";
-                                            }
-                                            break;
-                                        }
-                                    }
-
-                                }
-                            }
-                            
                         }
-                        else
+
+                        RestartWindowVisible = true;
+
+                        Part part = UnityEngine.Object.Instantiate(current.partPrefab);
+                        part.gameObject.SetActive(value: false);
+                        foreach (PartModule m in part.Modules)
                         {
-                            if (!fileExists)
+                            if (m.moduleName == "ModuleCargoPart")
                             {
-                                stringBuilder.Append(tmp);
-                                stringBuilder.AppendLine("//   Bypass reasons:");
-                                if (containsCrew)
-                                    stringBuilder.AppendLine("//      contains crew ");
-                                if (isTank)
-                                    stringBuilder.AppendLine("//      is tank");
-                                if (sizeTooBig)
-                                    stringBuilder.AppendLine("//      size exceeds largestAllowablePart: " + Settings.largestAllowablePart);
-                                if (contains_ModuleCargoPart && !Settings.processManipulableOnly)
-                                    stringBuilder.AppendLine("//      contains ModuleCargoPart");
-                                if (isStock)
-                                    stringBuilder.AppendLine("//      is Stock");
-                                stringBuilder.AppendLine("//");
+                                var mcp = m as ModuleCargoPart;
+                                mcp.part = part;
+                                mcp.packedVolume = adjVol;
 
-                                adjVol = -999;
-#if true
-                                current.partConfig.RemoveNode(currentCargoPart);
-                                //Part part = UnityEngine.Object.Instantiate(current.partPrefab);
-                                //part.gameObject.SetActive(value: false);
+                                if (stackableQuantity > 1)
+                                    mcp.stackableQuantity = stackableQuantity;
 
-                                Statics.Check4DelModCargoPart(part);
-                                //Destroy(part);
-#endif
+                                for (int i = current.moduleInfos.Count - 1; i >= 0; --i)
+                                {
+                                    AvailablePart.ModuleInfo info = current.moduleInfos[i];
+                                    if (info.moduleName == Localizer.Format("#autoLOC_8002221")) // Cargo Part
+                                    {
+                                        try
+                                        {
+                                            info.info = mcp.GetInfo();
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            Log.Error("PartInfo.Start, Part: " + current.partUrl + ", Exception caught in ModuleCargoPart.GetInfo, exception: " + ex.Message + "\n" + ex.StackTrace);
+                                            info.info = "KSP_PartVolume error";
+                                        }
+                                        break;
+                                    }
+                                }
+
                             }
                         }
                         Destroy(part);
-                        if (!Statics.modifiedParts.ContainsKey(current.partUrl))
-                            Statics.modifiedParts.Add(current.partUrl, new PartModification(stringBuilder, adjVol, adjVol == -999));
-                        else
-                            Log.Error("modifiedParts already contains: " + current.partUrl);
-                        if (!fileExists)
-                            stringBuilder.AppendLine("// ----------------------------------------------------------------------");
-
                     }
+                    else
+                    {
+                        if (!fileExists)
+                        {
+                            stringBuilder.Append(tmp);
+                            stringBuilder.AppendLine("//   Bypass reasons:");
+                            if (containsCrew)
+                                stringBuilder.AppendLine("//      contains crew ");
+                            if (isTank)
+                                stringBuilder.AppendLine("//      is tank");
+                            if (sizeTooBig)
+                                stringBuilder.AppendLine("//      size exceeds largestAllowablePart: " + Settings.largestAllowablePart);
+                            if (isStock)
+                                stringBuilder.AppendLine("//      is Stock");
+                            if (contains_ModuleCargoPart && !Settings.processManipulableOnly
+                                || contains_ModuleCargoPart && !isManipulableOnly
+                                )
+                                stringBuilder.AppendLine("//      contains ModuleCargoPart (packedVolume = " + currentCargoPartPackedVolume + ")");
+
+                            stringBuilder.AppendLine("//");
+
+                            adjVol = -999;
+#if true
+                            current.partConfig.RemoveNode(currentCargoPart);
+                            Part part = UnityEngine.Object.Instantiate(current.partPrefab);
+                            part.gameObject.SetActive(value: false);
+
+                            Statics.Check4DelModCargoPart(part);
+                            Destroy(part);
+#endif
+                        }
+                    }
+                    if (!Statics.modifiedParts.ContainsKey(current.partUrl))
+                        Statics.modifiedParts.Add(current.partUrl, new PartModification(stringBuilder, adjVol, adjVol == -999));
+                    else
+                        Log.Error("modifiedParts already contains: " + current.partUrl);
+                    if (!fileExists)
+                        stringBuilder.AppendLine("// ----------------------------------------------------------------------");
+
+
                 }
             }
 
@@ -434,18 +456,23 @@ namespace KSP_PartVolume
 
         private float AdjustedVolume(AvailablePart availPart, float vol, bool isEngine, bool isRcs, out float adj)
         {
-            float num = Settings.filler;
-            if (availPart.category == PartCategories.Science)
-                num = Math.Max(num, Settings.scienceFiller);
-            if (isEngine)
-                num = Math.Max(num, Settings.engineFiller);
-            if (isRcs)
-                num = Math.Max(num, Settings.rcsFiller);
-            adj = num;
-            return (float)Math.Floor(vol * (1.0 + num) + 1.0);
+            if (Settings.enableFillers)
+            {
+                float num = Settings.filler;
+                if (availPart.category == PartCategories.Science)
+                    num = Math.Max(num, Settings.scienceFiller);
+                if (isEngine)
+                    num = Math.Max(num, Settings.engineFiller);
+                if (isRcs)
+                    num = Math.Max(num, Settings.rcsFiller);
+                adj = num;
+                return (float)Math.Floor(vol * (1.0 + num) + 1.0);
+            }
+            else
+            {
+                adj = 0;
+                return vol;
+            }
         }
-
-
-
     }
 }

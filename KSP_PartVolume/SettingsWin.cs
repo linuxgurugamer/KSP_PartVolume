@@ -9,7 +9,7 @@ namespace KSP_PartVolume
     {
         int winId = SpaceTuxUtility.WindowHelper.NextWindowId("PartVolSettings");
         int restartWinId = SpaceTuxUtility.WindowHelper.NextWindowId("restartWinId");
-        Rect partVolSettingsRect = new Rect(0, 0, 400, 150);
+        Rect partVolSettingsRect = new Rect(0, 0, 450, 150);
         Rect RestartWindowRect = new Rect(0, 0, 500, 200);
 
         void Start2()
@@ -58,40 +58,51 @@ namespace KSP_PartVolume
         }
         void ToolbarWindow(int windowID)
         {
+            Settings.enableFillers = GUILayout.Toggle(Settings.enableFillers, "Enable Fillers");
+
+            if (Settings.enableFillers)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Space(50);
+                GUILayout.Label("Filler (" + (Settings.filler * 100).ToString("F0") + "%):");
+                GUILayout.FlexibleSpace();
+                Settings.filler = GUILayout.HorizontalSlider(Settings.filler, 0, 1, GUILayout.Width(250));
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Space(50);
+                GUILayout.Label("Science Filler (" + (Settings.scienceFiller * 100).ToString("F0") + "%):");
+                GUILayout.FlexibleSpace();
+                Settings.scienceFiller = GUILayout.HorizontalSlider(Settings.scienceFiller, 0, 1, GUILayout.Width(250));
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Space(50);
+                GUILayout.Label("Engine Filler (" + (Settings.engineFiller * 100).ToString("F0") + "%):");
+                GUILayout.FlexibleSpace();
+                Settings.engineFiller = GUILayout.HorizontalSlider(Settings.engineFiller, 0, 1, GUILayout.Width(250));
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Space(50);
+                GUILayout.Label("RCS Filler (" + (Settings.rcsFiller * 100).ToString("F0") + "%):");
+                GUILayout.FlexibleSpace();
+                Settings.rcsFiller = GUILayout.HorizontalSlider(Settings.rcsFiller, 0, 1, GUILayout.Width(250));
+                GUILayout.EndHorizontal();
+            }
+
             Settings.doTanks = GUILayout.Toggle(Settings.doTanks, "Include tanks");
             Settings.manned = GUILayout.Toggle(Settings.manned, "Include manned parts");
             Settings.doStock = GUILayout.Toggle(Settings.doStock, "Include stock parts");
             Settings.processManipulableOnly = GUILayout.Toggle(Settings.processManipulableOnly, "Process manipulable-only parts");
             Settings.limitSize = GUILayout.Toggle(Settings.limitSize, "Limit Size");
 
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Filler (" + (Settings.filler * 100).ToString("F0") + "%):");
-            GUILayout.FlexibleSpace();
-            Settings.filler = GUILayout.HorizontalSlider(Settings.filler, 0, 1, GUILayout.Width(250));
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Science Filler (" + (Settings.scienceFiller * 100).ToString("F0") + "%):");
-            GUILayout.FlexibleSpace();
-            Settings.scienceFiller = GUILayout.HorizontalSlider(Settings.scienceFiller, 0, 1, GUILayout.Width(250));
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Engine Filler (" + (Settings.engineFiller * 100).ToString("F0") + "%):");
-            GUILayout.FlexibleSpace();
-            Settings.engineFiller = GUILayout.HorizontalSlider(Settings.engineFiller, 0, 1, GUILayout.Width(250));
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("RCS Filler (" + (Settings.rcsFiller * 100).ToString("F0") + "%):");
-            GUILayout.FlexibleSpace();
-            Settings.rcsFiller = GUILayout.HorizontalSlider(Settings.rcsFiller, 0, 1, GUILayout.Width(250));
-            GUILayout.EndHorizontal();
             if (Settings.limitSize)
             {
                 GUILayout.BeginHorizontal();
+                GUILayout.Space(50);
                 GUILayout.Label("Largest Allowable Part: ");
-                var s = GUILayout.TextField(Settings.largestAllowablePart.ToString("F0"), GUILayout.Width(50));
+                var s = GUILayout.TextField(Settings.largestAllowablePart.ToString("F0"), GUILayout.Width(75));
                 GUILayout.Label(" liters");
                 if (float.TryParse(s, out float f))
                 {
@@ -99,6 +110,34 @@ namespace KSP_PartVolume
                 }
                 GUILayout.EndHorizontal();
             }
+
+            Settings.stackParts = GUILayout.Toggle(Settings.stackParts, "Allow Stackable Parts");
+
+            if (Settings.stackParts)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Space(50);
+                GUILayout.Label("Max Common Stack Volume: ");
+                var t1 = GUILayout.TextField(Settings.maxCommonStackVolume.ToString("F0"), GUILayout.Width(50));
+                GUILayout.Label(" liters");
+                if (float.TryParse(t1, out float f))
+                {
+                    Settings.maxCommonStackVolume = f;
+                }
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Space(50);
+                GUILayout.Label("Max Parts In Stack: ");
+                var t2 = GUILayout.TextField(Settings.maxPartsInStack.ToString(), GUILayout.Width(50));
+                GUILayout.Label("");
+                if (int.TryParse(t2, out int i))
+                {
+                    Settings.maxPartsInStack = i;
+                }
+                GUILayout.EndHorizontal();
+            }
+
             GUILayout.Space(20);
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
