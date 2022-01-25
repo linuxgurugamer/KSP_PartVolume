@@ -123,6 +123,7 @@ namespace KSP_PartVolume
 
                         bool containsCrew = false;
                         bool isTank = false;
+                        bool isTankNotIgnoreable = false;
                         bool sizeTooBig = false;
                         bool isStock = false;
 
@@ -172,7 +173,7 @@ namespace KSP_PartVolume
                         current.partConfig.TryGetValue("mass", ref mass);
                         float totalResMass = 0;
 
-                        if (!Settings.doTanks)
+                        //if (!Settings.doTanks)
                         {
                             foreach (var resNode in resNodes)
                             {
@@ -193,7 +194,10 @@ namespace KSP_PartVolume
                             }
 
                             if (totalResMass > mass)
-                                isTank = true;
+                            {
+                                isTankNotIgnoreable = true;
+                                    isTank = !Settings.doTanks;
+                            }
                         }
                         stringBuilder = new StringBuilder();
 
@@ -215,6 +219,10 @@ namespace KSP_PartVolume
 
                         if (vol > Settings.largestAllowablePart && Settings.limitSize)
                             sizeTooBig = true;
+
+                        var maxLen = Math.Max(bounds.size.x, Math.Max(bounds.size.y, bounds.size.z));
+                        var minLen = Math.Min(bounds.size.x, Math.Min(bounds.size.y, bounds.size.z));
+                        var tankVol = Math.Pow(minLen *0.5, 2) * maxLen * Math.PI * 1000;
 
                         var adjVol = AdjustedVolume(current, vol, isEnginePart, isRcsPart, out float adj);
 
@@ -253,7 +261,19 @@ namespace KSP_PartVolume
                             tmp.AppendLine("// RCS module detected");
                         if (isEnginePart)
                             tmp.AppendLine("// Engine module detected");
+                        Part part = UnityEngine.Object.Instantiate(current.partPrefab);
+                        part.gameObject.SetActive(value: false);
+
+                        if (isTankNotIgnoreable)
+                        {
+                            var volume = DetermineVolume(part) * 1000;
+                            stringBuilder.AppendLine("//      Calculated tank volume: " + volume.ToString("F1"));
+                            stringBuilder.AppendLine("//      Calculated tankVol (max x min) volume: " + tankVol.ToString("F1"));
+                            
+                        }
+
                         tmp.AppendLine("//");
+
 
                         if (!containsCrew && !isTank && !sizeTooBig && !isStock &&
                             (!contains_ModuleCargoPart ||
@@ -285,8 +305,6 @@ namespace KSP_PartVolume
 
                             RestartWindowVisible = true;
 
-                            Part part = UnityEngine.Object.Instantiate(current.partPrefab);
-                            part.gameObject.SetActive(value: false);
                             foreach (PartModule m in part.Modules)
                             {
                                 if (m.moduleName == "ModuleCargoPart")
@@ -315,7 +333,7 @@ namespace KSP_PartVolume
 
                                 }
                             }
-                            Destroy(part);
+                            
                         }
                         else
                         {
@@ -338,14 +356,15 @@ namespace KSP_PartVolume
                                 adjVol = -999;
 #if true
                                 current.partConfig.RemoveNode(currentCargoPart);
-                                Part part = UnityEngine.Object.Instantiate(current.partPrefab);
-                                part.gameObject.SetActive(value: false);
+                                //Part part = UnityEngine.Object.Instantiate(current.partPrefab);
+                                //part.gameObject.SetActive(value: false);
 
                                 Statics.Check4DelModCargoPart(part);
-                                Destroy(part);
+                                //Destroy(part);
 #endif
                             }
                         }
+                        Destroy(part);
                         if (!Statics.modifiedParts.ContainsKey(current.partUrl))
                             Statics.modifiedParts.Add(current.partUrl, new PartModification(stringBuilder, adjVol, adjVol == -999));
                         else
@@ -371,6 +390,32 @@ namespace KSP_PartVolume
             Log.Info(string.Format("Run in {0}ms", (object)stopwatch.ElapsedMilliseconds));
             //if (numCargoPartsAdded > 0)
             //    ShowWarning(numCargoPartsAdded);
+        }
+
+
+        // From @Taniwaha
+         double DetermineVolume(Part part)
+        {
+            var  mfList = part.FindModelComponents<MeshFilter>();
+                double vol = 0;
+            foreach (var mf in mfList)
+            {
+                Log.Info("Part: " + part.partName + ", mesh: " + mf.name);
+                Mesh mesh = mf.sharedMesh;
+                Vector3[] verts = mesh.vertices;
+                for (int sm = 0; sm < mesh.subMeshCount; sm++)
+                {
+                    int[] tris = mesh.GetTriangles(sm);
+                    for (int i = 0; i < tris.Length; i += 3)
+                    {
+                        Vector3d a = verts[tris[i]];
+                        Vector3d b = verts[tris[i + 1]];
+                        Vector3d c = verts[tris[i + 2]];
+                        vol += Vector3d.Dot(c, Vector3d.Cross(a, b)) / 6;
+                    }
+                }
+            }
+            return vol;
         }
 
 

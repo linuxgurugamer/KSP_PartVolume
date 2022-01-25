@@ -48,3 +48,6 @@ Changelog
 	Added part whitelist
 	Added option to allow manipulatable parts to have volumes changed
 	Added part    cryoengine-iguanodon-1    to blacklist due to an inability to properly get the correct dimensions from Unity for this engine
+
+0.0.3.1 (unreleased)
+	Added missing line to  config file (was not needed, but nice to have) for processManipulableOnly option
