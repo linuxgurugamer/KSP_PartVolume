@@ -10,17 +10,17 @@ namespace KSP_PartVolume
         int winId = SpaceTuxUtility.WindowHelper.NextWindowId("PartVolSettings");
         int restartWinId = SpaceTuxUtility.WindowHelper.NextWindowId("restartWinId");
         Rect partVolSettingsRect = new Rect(0, 0, 400, 150);
-        Rect RestartWindowRect = new Rect(0, 0, 500, 150);
+        Rect RestartWindowRect = new Rect(0, 0, 500, 200);
 
         void Start2()
         {
             RestartWindowRect.x = (Screen.width - RestartWindowRect.width) / 2;
-            RestartWindowRect.y = (Screen.height -RestartWindowRect.height) / 2;
+            RestartWindowRect.y = (Screen.height - RestartWindowRect.height) / 2;
         }
         void OnGUI()
         {
             OnGUI2();
-            if (visible) 
+            if (visible)
             {
                 GUI.skin = HighLogic.Skin;
                 partVolSettingsRect = ClickThruBlocker.GUILayoutWindow(winId, partVolSettingsRect, ToolbarWindow, "Part Volume Settings");
@@ -42,11 +42,15 @@ namespace KSP_PartVolume
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Exit Game now!", GUILayout.Width(180)))
             {
+                Log.Info("Trying Exit Game, application.Quit()");
                 Application.Quit();
             }
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Ignore and Continue", GUILayout.Width(180)))
+            {
+                Log.Info("Ignore and continue");
                 RestartWindowVisible = false;
+            }
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
@@ -57,6 +61,7 @@ namespace KSP_PartVolume
             Settings.doTanks = GUILayout.Toggle(Settings.doTanks, "Include tanks");
             Settings.manned = GUILayout.Toggle(Settings.manned, "Include manned parts");
             Settings.doStock = GUILayout.Toggle(Settings.doStock, "Include stock parts");
+            Settings.processManipulableOnly = GUILayout.Toggle(Settings.processManipulableOnly, "Process manipulable-only parts");
             Settings.limitSize = GUILayout.Toggle(Settings.limitSize, "Limit Size");
 
             GUILayout.BeginHorizontal();

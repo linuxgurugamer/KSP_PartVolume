@@ -17,6 +17,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		License.md = License.md
 		README.md = README.md
 		GameData\KSP_PartVolume\PluginData\ResourceBlacklist.txt = GameData\KSP_PartVolume\PluginData\ResourceBlacklist.txt
+		TODO.txt = TODO.txt
 	EndProjectSection
 EndProject
 Global
