@@ -23,6 +23,11 @@ namespace KSP_PartVolume
             if (visible)
             {
                 GUI.skin = HighLogic.Skin;
+
+                // Keep window on screen
+                partVolSettingsRect.y = Mathf.Clamp(partVolSettingsRect.y, 0, Screen.height - partVolSettingsRect.height);
+                partVolSettingsRect.x = Mathf.Clamp(partVolSettingsRect.x, 0, Screen.width - partVolSettingsRect.width);
+
                 partVolSettingsRect = ClickThruBlocker.GUILayoutWindow(winId, partVolSettingsRect, ToolbarWindow, "Part Volume Settings");
             }
             if (RestartWindowVisible)
@@ -96,6 +101,7 @@ namespace KSP_PartVolume
             Settings.doStock = GUILayout.Toggle(Settings.doStock, "Include stock parts");
             Settings.processManipulableOnly = GUILayout.Toggle(Settings.processManipulableOnly, "Process manipulable-only parts");
             Settings.limitSize = GUILayout.Toggle(Settings.limitSize, "Limit Size");
+            Settings.hideUnlessChangesDetected = GUILayout.Toggle(Settings.hideUnlessChangesDetected, "Hide button unless changes detected");
 
             if (Settings.limitSize)
             {

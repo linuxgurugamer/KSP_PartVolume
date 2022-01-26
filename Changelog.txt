@@ -51,3 +51,12 @@ Changelog
 
 0.0.3.1 (unreleased)
 	Added missing line to  config file (was not needed, but nice to have) for processManipulableOnly option
+	Added tank volume calculations
+	Added code to clamp window on screen
+	Now hides the button if no changes are detected
+	Thanks to user @yalov for these:
+		add stackable support:  parts, that is fitted at least two times in maxStackCommonVolume, have stackableQuantity, but no more than maxPartsInStack
+		add packedVolume to ModuleCargoPart Bypass reasons info
+		change patch, so an index of ModuleCargoPart is not changed
+		support blacklistRegexPattern, and move KerbalEVA there
+		update settings window (checkbox for all fillers)
