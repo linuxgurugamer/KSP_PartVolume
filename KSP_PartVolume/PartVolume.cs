@@ -26,6 +26,19 @@ namespace KSP_PartVolume
         }
     }
 
+    [KSPAddon(KSPAddon.Startup.Instantly, false)]
+    public class CheckOldFile: MonoBehaviour
+    {
+        public void Awake()
+        {
+            for (int i = 0; i < PartVolume.FILE_VERSION - 1; i++)
+            {
+                if (File.Exists(PartVolume.FileName(i)))
+                    File.Delete(PartVolume.FileName(i));
+            }
+
+        }
+    }
 
     [KSPAddon(KSPAddon.Startup.MainMenu, false)]
     public partial class PartVolume : MonoBehaviour
@@ -52,6 +65,18 @@ namespace KSP_PartVolume
         string blacklistRegexPattern = "";
         //string WhitelistRegexPattern = "";
 
+        internal const string FILENAME_PREFIX = "partVolumes";
+        //
+        // Increment when old file needs to be invalidated and deleted automatically
+        //
+        internal const int FILE_VERSION = 2;
+
+        internal  static string FileName(int i)
+        {
+            if (i > 0)
+                return KSPUtil.ApplicationRootPath + "GameData/" + FILENAME_PREFIX + "-v" + i.ToString() + ".cfg";
+            return KSPUtil.ApplicationRootPath + "GameData/" + FILENAME_PREFIX + ".cfg";
+        }
         private void Awake()
         {
             Instance = this;
@@ -60,7 +85,9 @@ namespace KSP_PartVolume
 #else
             Log = new Log("KSP_PartVolume", Log.LEVEL.ERROR);
 #endif
-            VOL_CFG_FILE = KSPUtil.ApplicationRootPath + "GameData/partVolumes.cfg";
+            //VOL_CFG_FILE = KSPUtil.ApplicationRootPath + "GameData/partVolumes.cfg";
+            VOL_CFG_FILE = FileName(FILE_VERSION);
+
             CFG_FILE = KSPUtil.ApplicationRootPath + "GameData/" + MODDIR + "/PluginData/KSP_PartVolume.cfg";
             KIFA = KSPUtil.ApplicationRootPath + "GameData/KerbalInventoryForAll/AllowModPartsInStock.cfg";
             RES_BLACKLIST = KSPUtil.ApplicationRootPath + "GameData/" + MODDIR + "/PluginData/ResourceBlacklist.txt";
@@ -302,7 +329,7 @@ namespace KSP_PartVolume
 
                     tmp.AppendLine("//");
 
-                    if (!containsCrew && !isTank && !sizeTooBig && !isStock &&
+                    if (!containsCrew && !isTank && !sizeTooBig && !isStock && !contains_ModuleInventoryPart &&
                         (!contains_ModuleCargoPart ||
                          (contains_ModuleCargoPart && Settings.processManipulableOnly && isManipulableOnly) ||
                        (!isKSP_PartVolumeModule && partWhitelist.Contains(partName))
@@ -322,11 +349,11 @@ namespace KSP_PartVolume
                         {
                             stringBuilder.AppendLine("@PART[" + adjName + "]:HAS[!MODULE[ModuleCargoPart]]:Final");
                             stringBuilder.AppendLine("{");
+                            stringBuilder.AppendLine("    MODULE");
+                            stringBuilder.AppendLine("    {");
+                            stringBuilder.AppendLine("        name = ModuleCargoPart");
+                            stringBuilder.AppendLine("        packedVolume = " + adjVol.ToString("F0"));
                         }
-                        stringBuilder.AppendLine("    MODULE");
-                        stringBuilder.AppendLine("    {");
-                        stringBuilder.AppendLine("        name = ModuleCargoPart");
-                        stringBuilder.AppendLine("        packedVolume = " + adjVol.ToString("F0"));
 
 
                         if (Settings.stackParts && stackableQuantity > 1)
@@ -393,7 +420,8 @@ namespace KSP_PartVolume
                             if (contains_ModuleCargoPart && !Settings.processManipulableOnly
                                 || contains_ModuleCargoPart && !isManipulableOnly)
                                 stringBuilder.AppendLine("//      contains ModuleCargoPart (packedVolume = " + currentCargoPartPackedVolume + ")");
-
+                            if (contains_ModuleInventoryPart)
+                                stringBuilder.AppendLine("//      contains ModuleInventoryPart");
                             stringBuilder.AppendLine("//");
 
                             adjVol = -999;
