@@ -63,3 +63,9 @@ Changelog
 	Fixed parts having ModuleInventoryPart getting a cargo module added
 	Added file versioning, with automatic deletion of old file versions
 	Fixed having manipuable parts constantly getting told to restart game
+
+0.0.3.2 
+	Updated original patch to only add ModuleCargoPart if no ModuleInventoryPart is there
+	Thanks to forum user @LEC for this patch
+		Added patch to add ModuleCargoPart and make sure ModuleInventoryPart is after ModuleCargoPart for those parts where there was a ModuleInventoryPart
+	Updated file version to 3

@@ -69,7 +69,7 @@ namespace KSP_PartVolume
         //
         // Increment when old file needs to be invalidated and deleted automatically
         //
-        internal const int FILE_VERSION = 2;
+        internal const int FILE_VERSION = 3;
 
         internal  static string FileName(int i)
         {
