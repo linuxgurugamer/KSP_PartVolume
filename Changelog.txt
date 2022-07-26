@@ -69,3 +69,6 @@ Changelog
 	Thanks to forum user @LEC for this patch
 		Added patch to add ModuleCargoPart and make sure ModuleInventoryPart is after ModuleCargoPart for those parts where there was a ModuleInventoryPart
 	Updated file version to 3
+
+0.0.3.3
+	Added patch to add packedVolumeLimit = 0 to those modules which existed and didn't have it
