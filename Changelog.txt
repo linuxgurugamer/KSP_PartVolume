@@ -72,3 +72,6 @@ Changelog
 
 0.0.3.3
 	Added patch to add packedVolumeLimit = 0 to those modules which existed and didn't have it
+
+0.0.3.4
+	Fixed deletion of older partVolumes cfg files (was leaving the previous one)

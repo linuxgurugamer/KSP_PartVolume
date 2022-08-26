@@ -31,7 +31,7 @@ namespace KSP_PartVolume
     {
         public void Awake()
         {
-            for (int i = 0; i < PartVolume.FILE_VERSION - 1; i++)
+            for (int i = 0; i < PartVolume.FILE_VERSION; i++)
             {
                 if (File.Exists(PartVolume.FileName(i)))
                     File.Delete(PartVolume.FileName(i));
