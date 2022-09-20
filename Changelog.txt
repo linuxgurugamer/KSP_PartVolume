@@ -75,3 +75,8 @@ Changelog
 
 0.0.3.4
 	Fixed deletion of older partVolumes cfg files (was leaving the previous one)
+
+0.0.3.5
+	Fixed mod running every time returned to mainMenu
+	Fixed mod appending comment lines to file every time game started, thereby invalidating the ModuleManager.ConfigCache
+	Fixed typos for KSP_PartVolume, stackableQuantity, and packedVolume

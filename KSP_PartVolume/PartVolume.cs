@@ -40,7 +40,7 @@ namespace KSP_PartVolume
         }
     }
 
-    [KSPAddon(KSPAddon.Startup.MainMenu, false)]
+    [KSPAddon(KSPAddon.Startup.MainMenu, true)]
     public partial class PartVolume : MonoBehaviour
     {
         internal static PartVolume Instance;
@@ -85,7 +85,7 @@ namespace KSP_PartVolume
 #else
             Log = new Log("KSP_PartVolume", Log.LEVEL.ERROR);
 #endif
-            //VOL_CFG_FILE = KSPUtil.ApplicationRootPath + "GameData/partVolumes.cfg";
+
             VOL_CFG_FILE = FileName(FILE_VERSION);
 
             CFG_FILE = KSPUtil.ApplicationRootPath + "GameData/" + MODDIR + "/PluginData/KSP_PartVolume.cfg";
@@ -319,15 +319,6 @@ namespace KSP_PartVolume
                     Part part = UnityEngine.Object.Instantiate(current.partPrefab);
                     part.gameObject.SetActive(value: false);
 
-                    if (isTankNotIgnoreable)
-                    {
-                        var volume = DetermineVolume(part) * 1000;
-                        stringBuilder.AppendLine("//      Calculated tank volume: " + volume.ToString("F1"));
-                        stringBuilder.AppendLine("//      Calculated tankVol (max x min) volume: " + tankVol.ToString("F1"));
-
-                    }
-
-                    tmp.AppendLine("//");
 
                     if (!containsCrew && !isTank && !sizeTooBig && !isStock && !contains_ModuleInventoryPart &&
                         (!contains_ModuleCargoPart ||
@@ -335,6 +326,16 @@ namespace KSP_PartVolume
                        (!isKSP_PartVolumeModule && partWhitelist.Contains(partName))
                         ))
                     {
+                        if (isTankNotIgnoreable )
+                        {
+                            var volume = DetermineVolume(part) * 1000;
+                            stringBuilder.AppendLine("//      Calculated tank volume: " + volume.ToString("F1"));
+                            stringBuilder.AppendLine("//      Calculated tankVol (max x min) volume: " + tankVol.ToString("F1"));
+                        }
+
+                        tmp.AppendLine("//");
+
+
                         stringBuilder.Append(tmp);
                         string adjName = partName.Replace(' ', '?').Replace('(', '?').Replace(')', '?');
                         if (contains_ModuleCargoPart)
@@ -343,7 +344,7 @@ namespace KSP_PartVolume
                             stringBuilder.AppendLine("{");
                             stringBuilder.AppendLine("    @MODULE[ModuleCargoPart]");
                             stringBuilder.AppendLine("    {");
-                            stringBuilder.AppendLine("        %packedVolume = " + adjVol.ToString("F0"));
+                            stringBuilder.AppendLine("        packedVolume = " + adjVol.ToString("F0"));
                         }
                         else
                         {
@@ -358,14 +359,12 @@ namespace KSP_PartVolume
 
                         if (Settings.stackParts && stackableQuantity > 1)
                         {
-                            stringBuilder.AppendLine("        %stackableQuantity = " + stackableQuantity);
+                            stringBuilder.AppendLine("        stackableQuantity = " + stackableQuantity);
                         }
 
-                        {
-                            stringBuilder.AppendLine("        %KSP_PartVolume = true");
-                            stringBuilder.AppendLine("    }");
-                            stringBuilder.AppendLine("}");
-                        }
+                        stringBuilder.AppendLine("        KSP_PartVolume = true");
+                        stringBuilder.AppendLine("    }");
+                        stringBuilder.AppendLine("}");
 
                         RestartWindowVisible = true;
                         newPartsDetected = true;
