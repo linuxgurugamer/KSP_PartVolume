@@ -80,3 +80,7 @@ Changelog
 	Fixed mod running every time returned to mainMenu
 	Fixed mod appending comment lines to file every time game started, thereby invalidating the ModuleManager.ConfigCache
 	Fixed typos for KSP_PartVolume, stackableQuantity, and packedVolume
+
+0.0.3.6
+	Added another set of parts to the blacklist (InternalRCS)
+	Added protection against unlikely divide-by-zero 

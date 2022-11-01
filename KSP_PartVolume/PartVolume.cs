@@ -274,7 +274,9 @@ namespace KSP_PartVolume
 
                     var adjVol = AdjustedVolume(current, vol, isEnginePart, isRcsPart, out float adj);
 
-                    int stackableQuantity = Math.Min((int)Settings.maxCommonStackVolume / (int)adjVol, Settings.maxPartsInStack);
+                    int stackableQuantity = 1;
+                    if ((int)adjVol != 0)
+                        stackableQuantity = Math.Min((int)Settings.maxCommonStackVolume / (int)adjVol, Settings.maxPartsInStack);
 
                     bool isManipulableOnly = false;
                     bool isKSP_PartVolumeModule = false;
