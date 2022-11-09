@@ -84,3 +84,6 @@ Changelog
 0.0.3.6
 	Added another set of parts to the blacklist (InternalRCS)
 	Added protection against unlikely divide-by-zero 
+
+0.0.3.7
+	Added message to log file to report modified parts (to assist knowing what parts are causing changes)
