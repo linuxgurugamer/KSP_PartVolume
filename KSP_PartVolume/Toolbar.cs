@@ -7,7 +7,7 @@ namespace KSP_PartVolume
 
     public partial class PartVolume : MonoBehaviour
     {
-        static internal ToolbarControl toolbarControl = null;
+        //static internal ToolbarControl toolbarControl = null;
 
         Rect RectGUI
         {

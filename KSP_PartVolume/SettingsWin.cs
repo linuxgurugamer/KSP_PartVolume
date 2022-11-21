@@ -1,6 +1,8 @@
-﻿using UnityEngine;
+﻿using System.IO;
+using System.Collections.Generic;
+using UnityEngine;
 using ClickThroughFix;
-
+using System.Diagnostics;
 
 namespace KSP_PartVolume
 {
@@ -16,7 +18,9 @@ namespace KSP_PartVolume
         {
             RestartWindowRect.x = (Screen.width - RestartWindowRect.width) / 2;
             RestartWindowRect.y = (Screen.height - RestartWindowRect.height) / 2;
+            GetCLIParams();
         }
+
         void OnGUI()
         {
             OnGUI2();
@@ -45,10 +49,10 @@ namespace KSP_PartVolume
             GUILayout.Space(20);
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button("Exit Game now!", GUILayout.Width(180)))
+            if (GUILayout.Button("Exit " + (Settings.restart?" & restart ":"") + "Game now!", GUILayout.Width(180)))
             {
-                Log.Info("Trying Exit Game, application.Quit()");
-                Application.Quit();
+                Log.Info("Trying Exit Game, application.Quit()");                
+                OkToExit();
             }
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Ignore and Continue", GUILayout.Width(180)))
@@ -61,6 +65,37 @@ namespace KSP_PartVolume
             GUILayout.EndVertical();
             GUI.DragWindow();
         }
+        string[] args = null;
+        void GetCLIParams()
+        {
+            args = System.Environment.GetCommandLineArgs();
+            for (int i = 0; i < args.Length; i++)
+            {
+                Log.Info("Arg[" + i + "]: " + args[i]);
+            }
+        }
+
+        void StartNewGame()
+        {
+            if (!Settings.restart)
+                return;
+            ProcessStartInfo startInfo = new ProcessStartInfo();
+            startInfo.FileName = args[0];
+            startInfo.Arguments = "";
+            for (int i = 1; i < args.Length; i++)
+            {
+                if (args[i].ToLower() != "-single-instance")
+                    startInfo.Arguments += args[i];
+                if (i < args.Length - 1)
+                    startInfo.Arguments += " ";
+            }
+
+            Log.Info("startInfo.FileName: " + startInfo.FileName +
+                ", startInfo.Arguments: " + startInfo.Arguments);
+            Process.Start(startInfo);
+
+        }
+
         void ToolbarWindow(int windowID)
         {
             Settings.enableFillers = GUILayout.Toggle(Settings.enableFillers, "Enable Fillers");
@@ -143,6 +178,7 @@ namespace KSP_PartVolume
                 }
                 GUILayout.EndHorizontal();
             }
+            Settings.restart = GUILayout.Toggle(Settings.restart, "Automatically restart if needed");
 
             GUILayout.Space(20);
             GUILayout.BeginHorizontal();

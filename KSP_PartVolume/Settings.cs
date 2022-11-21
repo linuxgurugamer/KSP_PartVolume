@@ -22,6 +22,7 @@ namespace KSP_PartVolume
         public static int maxPartsInStack = 4;
         public static float maxCommonStackVolume = 60f;
         public static bool hideUnlessChangesDetected = false;
+        public static bool restart = true;
 
         public static bool oEnableFillers = enableFillers;
         public static float oFiller = filler;
@@ -38,7 +39,7 @@ namespace KSP_PartVolume
         public static int oMaxPartsInStack = maxPartsInStack;
         public static float oMaxStackCommonVolume = maxCommonStackVolume;
         public static bool oHideUnlessChangesDetected = hideUnlessChangesDetected;
-
+        public static bool oRestart = restart;
         static internal void ResetToDefaults()
         {
             enableFillers = true;
@@ -56,6 +57,7 @@ namespace KSP_PartVolume
             maxPartsInStack = 4;
             maxCommonStackVolume = 60f;
             hideUnlessChangesDetected = false;
+            restart = true;
     }
         static internal void RememberSettings()
         {
@@ -74,6 +76,7 @@ namespace KSP_PartVolume
             oMaxPartsInStack = maxPartsInStack;
             oMaxStackCommonVolume = maxCommonStackVolume;
             oHideUnlessChangesDetected = hideUnlessChangesDetected;
+            oRestart = restart; 
         }
         static internal void LoadConfig()
         {
@@ -100,6 +103,8 @@ namespace KSP_PartVolume
             maxPartsInStack = node.SafeLoad("maxPartsInStack", maxPartsInStack);
             maxCommonStackVolume = node.SafeLoad("maxStackCommonVolume", maxCommonStackVolume);
             hideUnlessChangesDetected = node.SafeLoad("hideUnlessChangesDetected", hideUnlessChangesDetected);
+            restart = node.SafeLoad("restart", restart);
+
         }
 
         static internal void SaveConfig()
@@ -121,6 +126,7 @@ namespace KSP_PartVolume
             configNode2.AddValue("maxPartsInStack", maxPartsInStack);
             configNode2.AddValue("maxStackCommonVolume", maxCommonStackVolume);
             configNode2.AddValue("hideUnlessChangesDetected", hideUnlessChangesDetected);
+            configNode2.AddValue("restart", restart);
 
             configNode1.AddNode(configNode2);
             configNode1.Save(PartVolume.CFG_FILE);
@@ -139,7 +145,8 @@ namespace KSP_PartVolume
                 oStackParts != stackParts ||
                 oMaxPartsInStack != maxPartsInStack ||
                 oMaxStackCommonVolume != maxCommonStackVolume ||
-                oHideUnlessChangesDetected != hideUnlessChangesDetected
+                oHideUnlessChangesDetected != hideUnlessChangesDetected ||
+                oRestart != restart
                 )
             {
                 File.Delete(PartVolume.VOL_CFG_FILE);

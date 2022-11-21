@@ -87,3 +87,6 @@ Changelog
 
 0.0.3.7
 	Added message to log file to report modified parts (to assist knowing what parts are causing changes)
+
+0.0.3.8
+	Added ability to restart game after exiting

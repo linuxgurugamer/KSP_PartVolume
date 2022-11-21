@@ -53,6 +53,8 @@ namespace KSP_PartVolume
         public void OkToExit()
         {
             Application.Quit();
+            if (Settings.restart)
+                StartNewGame();
         }
     }
 }
