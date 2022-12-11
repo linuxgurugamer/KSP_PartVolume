@@ -90,3 +90,6 @@ Changelog
 
 0.0.3.8
 	Added ability to restart game after exiting
+
+0.0.3.9
+	Fixed syntax error in generated file which would keep adding same values over and over, causing an endless loop telling user to reboot

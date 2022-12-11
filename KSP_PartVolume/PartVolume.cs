@@ -69,7 +69,7 @@ namespace KSP_PartVolume
         //
         // Increment when old file needs to be invalidated and deleted automatically
         //
-        internal const int FILE_VERSION = 3;
+        internal const int FILE_VERSION = 4;
 
         internal  static string FileName(int i)
         {
@@ -346,7 +346,7 @@ namespace KSP_PartVolume
                             stringBuilder.AppendLine("{");
                             stringBuilder.AppendLine("    @MODULE[ModuleCargoPart]");
                             stringBuilder.AppendLine("    {");
-                            stringBuilder.AppendLine("        packedVolume = " + adjVol.ToString("F0"));
+                            stringBuilder.AppendLine("        %packedVolume = " + adjVol.ToString("F0"));
                         }
                         else
                         {
@@ -355,16 +355,16 @@ namespace KSP_PartVolume
                             stringBuilder.AppendLine("    MODULE");
                             stringBuilder.AppendLine("    {");
                             stringBuilder.AppendLine("        name = ModuleCargoPart");
-                            stringBuilder.AppendLine("        packedVolume = " + adjVol.ToString("F0"));
+                            stringBuilder.AppendLine("        %packedVolume = " + adjVol.ToString("F0"));
                         }
 
 
                         if (Settings.stackParts && stackableQuantity > 1)
                         {
-                            stringBuilder.AppendLine("        stackableQuantity = " + stackableQuantity);
+                            stringBuilder.AppendLine("        %stackableQuantity = " + stackableQuantity);
                         }
 
-                        stringBuilder.AppendLine("        KSP_PartVolume = true");
+                        stringBuilder.AppendLine("        %KSP_PartVolume = true");
                         stringBuilder.AppendLine("    }");
                         stringBuilder.AppendLine("}");
 
