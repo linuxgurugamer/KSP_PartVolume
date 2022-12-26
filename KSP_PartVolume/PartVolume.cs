@@ -440,7 +440,7 @@ namespace KSP_PartVolume
                     if (!Statics.modifiedParts.ContainsKey(current.partUrl))
                     {
                         Statics.modifiedParts.Add(current.partUrl, new PartModification(stringBuilder, adjVol, adjVol == -999));
-                        Log.Error("Modified part: " + current.partUrl);
+                        Log.Info("Modified part: " + current.partUrl);
                     }
                     else
                         Log.Error("modifiedParts already contains: " + current.partUrl);
