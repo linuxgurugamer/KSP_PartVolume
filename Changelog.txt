@@ -97,7 +97,7 @@ Changelog
 0.0.3.10
 	Changed some logging from Log.Error to Log.Info
 	
-0.0.3.11 (unreleased)
+0.0.3.11
 	Added blacklistModDir to blacklist complete mod dir
 	Added UmbraSpace to the blacklistModDir as all of it's parts were coming up with a wrong volume, due to the way the parts were made
-	Added checkfor ModuleGroundPart
+	Added check for ModuleGroundPart
