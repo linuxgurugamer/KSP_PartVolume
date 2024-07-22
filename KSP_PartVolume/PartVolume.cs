@@ -61,6 +61,7 @@ namespace KSP_PartVolume
         static bool newPartsDetected = false;
         List<string> resourceBlackList;
         List<String> partBlacklist;
+        List<String> modBlacklist;
         List<String> partWhitelist;
         string blacklistRegexPattern = "";
         //string WhitelistRegexPattern = "";
@@ -95,6 +96,7 @@ namespace KSP_PartVolume
             var blacklistFile = File.ReadAllLines(RES_BLACKLIST);
             resourceBlackList = new List<string>(blacklistFile);
             partBlacklist = new List<string>();
+            modBlacklist = new List<string>();
             partWhitelist = new List<String>();
 
             ConfigNode[] partBlacklistNodes = GameDatabase.Instance.GetConfigNodes(PARTBLACKLIST);
@@ -103,12 +105,17 @@ namespace KSP_PartVolume
                 var v = n.GetValues("blacklistPart");
                 foreach (var v1 in v)
                     partBlacklist.Add(v1);
+                v = n.GetValues("blacklistModDir");
+                foreach (var v2 in v)
+                    modBlacklist.Add(v2);
 
                 var patterns = n.GetValues("blacklistRegexPattern");
                 blacklistRegexPattern = String.Join("|", patterns.Select(x => "(" + x + ")"));
             }
             foreach (var p in partBlacklist)
                 Log.Info("Part blacklisted: " + p);
+            foreach (var p in modBlacklist)
+                Log.Info("Mod directory blacklisted: " + p);
 
 
             ConfigNode[] partWhitelistNodes = GameDatabase.Instance.GetConfigNodes(PARTWHITELIST);
@@ -148,6 +155,17 @@ namespace KSP_PartVolume
                     AvailablePart current = partEnumerator.Current;
 
                     string[] urlParts = current.partUrl.Split('/');
+                    bool blacklistedMod = false;
+                    for (int ui = 0; ui < urlParts.Length - 1; ui++)
+                    {
+                        if (modBlacklist.Contains(urlParts[ui]))
+                        {
+                            Log.Info(String.Format("ModDirName: {0, -40} found in the blacklist and ignored.", urlParts[ui] + ","));
+                            blacklistedMod = true;
+                            break;
+                        }
+                    }
+                    if (blacklistedMod) { continue; }
                     string urlName = urlParts[urlParts.Length - 1];
 
                     //
@@ -168,6 +186,7 @@ namespace KSP_PartVolume
                     bool contains_ModuleCargoPart = false;
                     bool contains_ModuleInventoryPart = false;
                     bool contains_KSPPartVolumeModule = false;
+                    bool contains_ModuleGroundPart = false;
 
                     bool containsCrew = false;
                     bool isTank = false;
@@ -197,9 +216,12 @@ namespace KSP_PartVolume
                             contains_ModuleCargoPart = true;
                             currentCargoPart = moduleNodes[i];
                         }
+                        if (name == "ModuleGroundPart")
+                            contains_ModuleGroundPart = true;
                         if (name == "ModuleInventoryPart")
                             contains_ModuleInventoryPart = true;
-                        if (name == "KSPPartVolumeModule") contains_KSPPartVolumeModule = true;
+                        if (name == "KSPPartVolumeModule") 
+                            contains_KSPPartVolumeModule = true;
                         if (name == "ModuleRCS" || name == "ModuleRCSFX") isRcsPart = true;
                         if (name == "ModuleEngines" || name == "ModuleEnginesFX") isEnginePart = true;
 
@@ -322,7 +344,7 @@ namespace KSP_PartVolume
                     part.gameObject.SetActive(value: false);
 
 
-                    if (!containsCrew && !isTank && !sizeTooBig && !isStock && !contains_ModuleInventoryPart &&
+                    if (!containsCrew && !isTank && !sizeTooBig && !isStock && !contains_ModuleInventoryPart && !contains_ModuleGroundPart &&
                         (!contains_ModuleCargoPart ||
                          (contains_ModuleCargoPart && Settings.processManipulableOnly && isManipulableOnly) ||
                        (!isKSP_PartVolumeModule && partWhitelist.Contains(partName))
@@ -423,6 +445,8 @@ namespace KSP_PartVolume
                                 stringBuilder.AppendLine("//      contains ModuleCargoPart (packedVolume = " + currentCargoPartPackedVolume + ")");
                             if (contains_ModuleInventoryPart)
                                 stringBuilder.AppendLine("//      contains ModuleInventoryPart");
+                            if (contains_ModuleGroundPart)
+                                stringBuilder.AppendLine("//      contains ModuleGroundPart");
                             stringBuilder.AppendLine("//");
 
                             adjVol = -999;
