@@ -104,3 +104,11 @@ Changelog
 
 0.0.3.12
 	Fixed parts which had ModuleGroundPart also getting a volume of -1
+
+0.0.3.13
+	Fixed parts which had the following modules also getting a volume of -1:
+		ModuleGroundCommsPart
+		ModuleGroundExpControl
+		ModuleGroundExperiment
+		ModuleGroundSciencePart
+	
