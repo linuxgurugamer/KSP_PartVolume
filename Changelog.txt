@@ -101,3 +101,6 @@ Changelog
 	Added blacklistModDir to blacklist complete mod dir
 	Added UmbraSpace to the blacklistModDir as all of it's parts were coming up with a wrong volume, due to the way the parts were made
 	Added check for ModuleGroundPart
+
+0.0.3.12
+	Fixed parts which had ModuleGroundPart also getting a volume of -1
