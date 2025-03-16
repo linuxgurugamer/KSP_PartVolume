@@ -17,8 +17,8 @@ namespace KSP_PartVolume
         public static float largestAllowablePart = 64000f;
         public static bool manned = false;
         public static bool doStock = false;
-        public static bool processManipulableOnly = false;
         public static bool stackParts = false;
+        public static bool processManipulableOnly = false;
         public static int maxPartsInStack = 4;
         public static float maxCommonStackVolume = 60f;
         public static bool hideUnlessChangesDetected = false;
@@ -146,7 +146,8 @@ namespace KSP_PartVolume
                 oMaxPartsInStack != maxPartsInStack ||
                 oMaxStackCommonVolume != maxCommonStackVolume ||
                 oHideUnlessChangesDetected != hideUnlessChangesDetected ||
-                oRestart != restart
+                oRestart != restart ||
+                CheckOldFile.oldFileDeleted
                 )
             {
                 File.Delete(PartVolume.VOL_CFG_FILE);

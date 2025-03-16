@@ -1,13 +1,13 @@
-﻿using System;
+﻿using KSP.Localization;
+using KSP_Log;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
-using UnityEngine;
-using KSP_Log;
-using KSP.Localization;
-using System.Text.RegularExpressions;
 using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
+using UnityEngine;
 
 namespace KSP_PartVolume
 {
@@ -27,14 +27,18 @@ namespace KSP_PartVolume
     }
 
     [KSPAddon(KSPAddon.Startup.Instantly, false)]
-    public class CheckOldFile: MonoBehaviour
+    public class CheckOldFile : MonoBehaviour
     {
+        public static bool oldFileDeleted = false;
         public void Awake()
         {
             for (int i = 0; i < PartVolume.FILE_VERSION; i++)
             {
                 if (File.Exists(PartVolume.FileName(i)))
+                {
                     File.Delete(PartVolume.FileName(i));
+                    oldFileDeleted = true;
+                }
             }
 
         }
@@ -62,6 +66,7 @@ namespace KSP_PartVolume
         List<string> resourceBlackList;
         List<String> partBlacklist;
         List<String> modBlacklist;
+        List<String> moduleBlacklist;
         List<String> partWhitelist;
         string blacklistRegexPattern = "";
         //string WhitelistRegexPattern = "";
@@ -70,14 +75,15 @@ namespace KSP_PartVolume
         //
         // Increment when old file needs to be invalidated and deleted automatically
         //
-        internal const int FILE_VERSION = 4;
+        internal const int FILE_VERSION = 5;
 
-        internal  static string FileName(int i)
+        internal static string FileName(int i)
         {
             if (i > 0)
                 return KSPUtil.ApplicationRootPath + "GameData/" + FILENAME_PREFIX + "-v" + i.ToString() + ".cfg";
             return KSPUtil.ApplicationRootPath + "GameData/" + FILENAME_PREFIX + ".cfg";
         }
+
         private void Awake()
         {
             Instance = this;
@@ -97,11 +103,13 @@ namespace KSP_PartVolume
             resourceBlackList = new List<string>(blacklistFile);
             partBlacklist = new List<string>();
             modBlacklist = new List<string>();
+            moduleBlacklist = new List<string>();
             partWhitelist = new List<String>();
 
             ConfigNode[] partBlacklistNodes = GameDatabase.Instance.GetConfigNodes(PARTBLACKLIST);
-            foreach (var n in partBlacklistNodes)
+            for (int i = 0; i < partBlacklistNodes.Length; i++)
             {
+                var n = partBlacklistNodes[i];
                 var v = n.GetValues("blacklistPart");
                 foreach (var v1 in v)
                     partBlacklist.Add(v1);
@@ -109,14 +117,30 @@ namespace KSP_PartVolume
                 foreach (var v2 in v)
                     modBlacklist.Add(v2);
 
+                v = n.GetValues("blacklistModule");
+                foreach (var v3 in v)
+                    moduleBlacklist.Add(v3);
+
+
                 var patterns = n.GetValues("blacklistRegexPattern");
                 blacklistRegexPattern = String.Join("|", patterns.Select(x => "(" + x + ")"));
             }
+            //
+            // Note:  Due to the time this runs, log lines will NOT be written to the normal
+            // KSP log.  However, they WILL be written to the Logs/SpaceTux/KSP_PartVolume.log file
+            //
             foreach (var p in partBlacklist)
+            {
                 Log.Info("Part blacklisted: " + p);
+            }
+            foreach (var p in moduleBlacklist)
+            {
+                Log.Info("Module blacklisted: " + p);
+            }
             foreach (var p in modBlacklist)
+            {
                 Log.Info("Mod directory blacklisted: " + p);
-
+            }
 
             ConfigNode[] partWhitelistNodes = GameDatabase.Instance.GetConfigNodes(PARTWHITELIST);
             foreach (var n in partWhitelistNodes)
@@ -129,8 +153,9 @@ namespace KSP_PartVolume
                 //WhitelistRegexPattern = String.Join("|", patterns.Select(x => "(" + x + ")"));
             }
             foreach (var p in partWhitelist)
+            {
                 Log.Info("Part whitelisted: " + p);
-
+            }
         }
 
         public void Start()
@@ -216,11 +241,19 @@ namespace KSP_PartVolume
                             contains_ModuleCargoPart = true;
                             currentCargoPart = moduleNodes[i];
                         }
-                        if (name == "ModuleGroundPart")
-                            contains_ModuleGroundPart = true;
+                        for (int j = 0; j < moduleBlacklist.Count; j++)
+                        {
+                            if (name == moduleBlacklist[j])
+                            {
+                                contains_ModuleCargoPart = true;
+                                break;
+                            }
+                        }
+                        //if (name == "ModuleGroundPart")
+                        //contains_ModuleGroundPart = true;
                         if (name == "ModuleInventoryPart")
                             contains_ModuleInventoryPart = true;
-                        if (name == "KSPPartVolumeModule") 
+                        if (name == "KSPPartVolumeModule")
                             contains_KSPPartVolumeModule = true;
                         if (name == "ModuleRCS" || name == "ModuleRCSFX") isRcsPart = true;
                         if (name == "ModuleEngines" || name == "ModuleEnginesFX") isEnginePart = true;
@@ -245,15 +278,15 @@ namespace KSP_PartVolume
 
                     //if (!Settings.doTanks)
                     {
-                        foreach (var resNode in resNodes)
+                        for (int i = 0;i < resNodes.Length;i++) 
                         {
-                            var name = resNode.GetValue("name");
+                            var name = resNodes[i].GetValue("name");
 
                             if (resourceBlackList.Contains(name))
                                 continue;
 
                             float maxAmount = 0;
-                            resNode.TryGetValue("maxAmount", ref maxAmount);
+                            resNodes[i].TryGetValue("maxAmount", ref maxAmount);
                             var definition = PartResourceLibrary.Instance.GetDefinition(name);
                             if (definition != null)
                             {
@@ -272,6 +305,7 @@ namespace KSP_PartVolume
                     stringBuilder = new StringBuilder();
 
                     Bounds bounds = default(Bounds);
+
                     foreach (Bounds rendererBound in PartGeometryUtil.GetRendererBounds((Part)current.partPrefab))
                         bounds.Encapsulate(rendererBound);
 
@@ -350,7 +384,7 @@ namespace KSP_PartVolume
                        (!isKSP_PartVolumeModule && partWhitelist.Contains(partName))
                         ))
                     {
-                        if (isTankNotIgnoreable )
+                        if (isTankNotIgnoreable)
                         {
                             var volume = DetermineVolume(part) * 1000;
                             stringBuilder.AppendLine("//      Calculated tank volume: " + volume.ToString("F1"));
@@ -394,11 +428,11 @@ namespace KSP_PartVolume
                         newPartsDetected = true;
                         part = UnityEngine.Object.Instantiate(current.partPrefab);
                         part.gameObject.SetActive(value: false);
-                        foreach (PartModule m in part.Modules)
-                        {
-                            if (m.moduleName == "ModuleCargoPart")
+                        for (int j = 0; j < part.Modules.Count; j++)
+                        { 
+                            if (part.Modules[j].moduleName == "ModuleCargoPart")
                             {
-                                var mcp = m as ModuleCargoPart;
+                                var mcp = part.Modules[j] as ModuleCargoPart;
                                 mcp.part = part;
                                 mcp.packedVolume = adjVol;
 
@@ -497,10 +531,10 @@ namespace KSP_PartVolume
         {
             var mfList = part.FindModelComponents<MeshFilter>();
             double vol = 0;
-            foreach (var mf in mfList)
-            {
-                Log.Info("Part: " + part.partName + ", mesh: " + mf.name);
-                Mesh mesh = mf.sharedMesh;
+            for (int j = 0; j < mfList.Count;j++)
+            { 
+                Log.Info("Part: " + part.partName + ", mesh: " + mfList[j].name);
+                Mesh mesh = mfList[j].sharedMesh;
                 Vector3[] verts = mesh.vertices;
                 for (int sm = 0; sm < mesh.subMeshCount; sm++)
                 {

@@ -1,6 +1,6 @@
 {
   "NAME": "KSP_PartVolume",
-  "URL": "http://ksp.spacetux.net/avc/KSP_PartVolume",
+  "URL": "https://raw.githubusercontent.com/linuxgurugamer/KSP_PartVolume/refs/heads/master/KSP_PartVolume.version",
   "DOWNLOAD": "https://github.com/linuxgurugamer/KSP_PartVolume/releases",
   "GITHUB": {
     "USERNAME": "linuxgurugamer",
@@ -10,8 +10,8 @@
   "VERSION": {
     "MAJOR": 0,
     "MINOR": 0,
-    "PATCH": 3,
-    "BUILD": 13
+    "PATCH": 4,
+    "BUILD": 0
   },
   "KSP_VERSION": {
     "MAJOR": 1,
