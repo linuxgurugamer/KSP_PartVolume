@@ -119,3 +119,6 @@ Changelog
 	Added new option to PartBlacklist.cfg file to allow blacklisting modules
 	Removed hard-coded check for ModuleGroundPart, now using entries in the PartBlacklist.cfg file
 	Removed included config file
+
+0.0.4.1
+	Fixed Regex check for modules

@@ -8,7 +8,7 @@ rem VERSIONFILE is the name of the version file, usually the same as GAMEDATA,
 rem    but not always
 
 set H=%KSPDIR%
-set H2=R:\KSP_1.12.5-dev2
+set H2=R:\KSP_1.12.5-dev
 
 
 

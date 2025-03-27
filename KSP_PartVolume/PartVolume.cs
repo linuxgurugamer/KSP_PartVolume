@@ -67,8 +67,8 @@ namespace KSP_PartVolume
         List<String> partBlacklist;
         List<String> modBlacklist;
         List<String> moduleBlacklist;
+        List<String> moduleBlacklistRegex;
         List<String> partWhitelist;
-        string blacklistRegexPattern = "";
         //string WhitelistRegexPattern = "";
 
         internal const string FILENAME_PREFIX = "partVolumes";
@@ -86,6 +86,8 @@ namespace KSP_PartVolume
 
         private void Awake()
         {
+            string blacklistRegexPattern = "";
+
             Instance = this;
 #if DEBUG
             Log = new Log("KSP_PartVolume", Log.LEVEL.INFO);
@@ -104,6 +106,7 @@ namespace KSP_PartVolume
             partBlacklist = new List<string>();
             modBlacklist = new List<string>();
             moduleBlacklist = new List<string>();
+            moduleBlacklistRegex = new List<string>();
             partWhitelist = new List<String>();
 
             ConfigNode[] partBlacklistNodes = GameDatabase.Instance.GetConfigNodes(PARTBLACKLIST);
@@ -124,6 +127,7 @@ namespace KSP_PartVolume
 
                 var patterns = n.GetValues("blacklistRegexPattern");
                 blacklistRegexPattern = String.Join("|", patterns.Select(x => "(" + x + ")"));
+                moduleBlacklistRegex.Add(blacklistRegexPattern);
             }
             //
             // Note:  Due to the time this runs, log lines will NOT be written to the normal
@@ -201,13 +205,21 @@ namespace KSP_PartVolume
                     string partName = urlParts[urlParts.Length - 1];
                     if (partName == "") partName = current.name;
 
-                    if (partBlacklist.Contains(partName) ||
-                        Regex.IsMatch(partName, blacklistRegexPattern))
+                    if (partBlacklist.Contains(partName))
                     {
                         Log.Info(String.Format("partName: {0, -40} found in the blacklist and ignored.", partName + ","));
                         continue;
                     }
-
+                    var regexFound = false;
+                    foreach (var r in moduleBlacklistRegex)
+                    {
+                        if (Regex.IsMatch(partName, r))
+                        {
+                            Log.Info(String.Format("partName: {0, -40} found in the blacklist regex and ignored.", partName + ","));
+                            regexFound = true;
+                        }
+                    }
+                    if (regexFound) { continue; }
                     bool contains_ModuleCargoPart = false;
                     bool contains_ModuleInventoryPart = false;
                     bool contains_KSPPartVolumeModule = false;
@@ -278,7 +290,7 @@ namespace KSP_PartVolume
 
                     //if (!Settings.doTanks)
                     {
-                        for (int i = 0;i < resNodes.Length;i++) 
+                        for (int i = 0; i < resNodes.Length; i++)
                         {
                             var name = resNodes[i].GetValue("name");
 
@@ -429,7 +441,7 @@ namespace KSP_PartVolume
                         part = UnityEngine.Object.Instantiate(current.partPrefab);
                         part.gameObject.SetActive(value: false);
                         for (int j = 0; j < part.Modules.Count; j++)
-                        { 
+                        {
                             if (part.Modules[j].moduleName == "ModuleCargoPart")
                             {
                                 var mcp = part.Modules[j] as ModuleCargoPart;
@@ -531,8 +543,8 @@ namespace KSP_PartVolume
         {
             var mfList = part.FindModelComponents<MeshFilter>();
             double vol = 0;
-            for (int j = 0; j < mfList.Count;j++)
-            { 
+            for (int j = 0; j < mfList.Count; j++)
+            {
                 Log.Info("Part: " + part.partName + ", mesh: " + mfList[j].name);
                 Mesh mesh = mfList[j].sharedMesh;
                 Vector3[] verts = mesh.vertices;
