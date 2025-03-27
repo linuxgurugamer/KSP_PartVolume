@@ -67,7 +67,7 @@ namespace KSP_PartVolume
         List<String> partBlacklist;
         List<String> modBlacklist;
         List<String> moduleBlacklist;
-        List<String> moduleBlacklistRegex;
+        List<String> partBlacklistRegex;
         List<String> partWhitelist;
         //string WhitelistRegexPattern = "";
 
@@ -106,7 +106,7 @@ namespace KSP_PartVolume
             partBlacklist = new List<string>();
             modBlacklist = new List<string>();
             moduleBlacklist = new List<string>();
-            moduleBlacklistRegex = new List<string>();
+            partBlacklistRegex = new List<string>();
             partWhitelist = new List<String>();
 
             ConfigNode[] partBlacklistNodes = GameDatabase.Instance.GetConfigNodes(PARTBLACKLIST);
@@ -127,7 +127,7 @@ namespace KSP_PartVolume
 
                 var patterns = n.GetValues("blacklistRegexPattern");
                 blacklistRegexPattern = String.Join("|", patterns.Select(x => "(" + x + ")"));
-                moduleBlacklistRegex.Add(blacklistRegexPattern);
+                partBlacklistRegex.Add(blacklistRegexPattern);
             }
             //
             // Note:  Due to the time this runs, log lines will NOT be written to the normal
@@ -211,7 +211,7 @@ namespace KSP_PartVolume
                         continue;
                     }
                     var regexFound = false;
-                    foreach (var r in moduleBlacklistRegex)
+                    foreach (var r in partBlacklistRegex)
                     {
                         if (Regex.IsMatch(partName, r))
                         {
